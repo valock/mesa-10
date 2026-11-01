@@ -52,18 +52,19 @@ function legal(t,seat=t.hand.actor){const h=t.hand;if(h.phase!=='betting'||seat=
  const reopen=!h.acted[seat]||h.currentBet-h.actedAt[seat]>=h.lastRaise;
  const minTo=h.currentBet?h.currentBet+h.lastRaise:h.kind==='omaha'?100:25;
  const stackTo=h.wagers[seat]+stack,cap=h.kind==='omaha'?Math.min(stackTo,h.wagers[seat]+pot(t)+2*call):stackTo;
- const raise=reopen&&stack>call&&cap>h.currentBet&&(cap>=minTo||cap===stackTo);
- return {fold:true,check:call===0,call,minTo:Math.min(minTo,cap),fullMinTo:minTo,maxTo:cap,raise,allIn:raise&&cap===stackTo,stack,already:h.wagers[seat],currentBet:h.currentBet};
+ const maxTo=cap===stackTo?stackTo:Math.floor(cap/25)*25,roundedMin=Math.ceil(minTo/25)*25;const raise=reopen&&stack>call&&maxTo>h.currentBet&&(maxTo>=roundedMin||maxTo===stackTo);
+ return {fold:true,check:call===0,call,minTo:Math.min(roundedMin,maxTo),fullMinTo:roundedMin,maxTo,raise,allIn:raise&&maxTo===stackTo,stack,already:h.wagers[seat],currentBet:h.currentBet};
 }
+function sizing(l,n){const rounded=Math.floor(n/25)*25;return Math.min(l.maxTo,Math.max(l.minTo,rounded));}
 function holePower(cards){const vals=cards.map(c=>E.rankValue(c[0])).sort((a,b)=>b-a),pair=vals[0]===vals[1];if(cards.length===2)return clamp((vals[0]+vals[1]-4)/26*.65+(pair?.3:0)+(cards[0][1]===cards[1][1]?.06:0)+(vals[0]-vals[1]<=2?.06:0),.05,.99);
  const counts={};vals.forEach(v=>counts[v]=(counts[v]||0)+1);const suits={};cards.forEach(c=>suits[c[1]]=(suits[c[1]]||0)+1);return clamp(vals.reduce((a,b)=>a+b,0)/56*.52+Object.values(counts).filter(n=>n>=2).length*.12+Object.values(suits).filter(n=>n===2).length*.1+(new Set(vals).size>=3&&vals[0]-vals.at(-1)<=5?.12:0),.1,.98);
 }
 function bot(t,seat){const h=t.hand,l=legal(t,seat),style=t.players[seat].style,pressure=t.config.atmosphere==='pressure'?.18:0,agg=clamp(style.aggression+pressure+h.mood,.1,.95),loose=style.loose;
  let power=holePower(h.holes[seat]);if(h.street){const made=(h.kind==='omaha'?E.bestOmaha:E.bestHoldem)(h.holes[seat],h.board.slice(0,h.visible));power=clamp(.1+made.category*.14+(made.vector[1]||0)/140,0,.99);}
  const odds=l.call/(pot(t)+l.call),r=rand(t),raiseChance=agg*(power>.65?.65:.13);
- if(l.raise&&h.roundRaises<3&&r<raiseChance){const fractions=t.config.atmosphere==='pressure'?[.75,1,1.25]:[.33,.5,.75,1],size=fractions[Math.floor(rand(t)*fractions.length)];const target=h.street===0?Math.max(l.fullMinTo,h.currentBet?Math.round(h.currentBet*(2.2+rand(t))):63):Math.max(l.fullMinTo,l.already+l.call+Math.round((pot(t)+l.call)*size));return {action:'raise',to:clamp(target,l.minTo,l.maxTo)};}
+ if(l.raise&&h.roundRaises<3&&r<raiseChance){const fractions=t.config.atmosphere==='pressure'?[.75,1,1.25]:[.33,.5,.75,1],size=fractions[Math.floor(rand(t)*fractions.length)];const target=h.street===0?Math.max(l.fullMinTo,h.currentBet?Math.round(h.currentBet*(2.2+rand(t))):63):Math.max(l.fullMinTo,l.already+l.call+Math.round((pot(t)+l.call)*size));return {action:'raise',to:sizing(l,target)};}
  if(l.call){const confidence=power+loose*.23-odds*.6;return {action:confidence<.33&&rand(t)>.12?'fold':'call'};}
- if(l.raise&&h.currentBet===0&&rand(t)<agg*(.28+power*.5)){return {action:'raise',to:clamp(Math.round(Math.max(25,pot(t)*(rand(t)<.5?.5:.75))),l.minTo,l.maxTo)};}
+ if(l.raise&&h.currentBet===0&&rand(t)<agg*(.28+power*.5)){return {action:'raise',to:sizing(l,Math.max(h.kind==='omaha'?100:25,pot(t)*(rand(t)<.5?.5:.75)))};}
  return {action:'check'};
 }
 function publicSpot(t){const h=t.hand,l=legal(t,0);if(!l)return null;return {currencyVersion:t.currencyVersion||0,kind:h.kind,number:h.number,street:h.street,position:position(t),rule:t.config.rule,cards:[...h.holes[0]],board:h.board.slice(0,h.visible),pot:bb(pot(t)),stack:bb(t.players[0].stack),toCall:bb(l.call),minRaiseTo:bb(l.minTo),maxRaiseTo:bb(l.maxTo),currentBet:bb(h.currentBet),already:bb(l.already),canRaise:l.raise,canCheck:l.check,opponents:live(h).length-1,opened:h.roundRaises>0,assisted:h.assisted};}
@@ -86,7 +87,7 @@ function reference(s){const gross=money(s.pot+s.toCall),fee=s.currencyVersion?ra
  return {expected,accepted,reason,theme,equity:eq,price};
 }
 function act(t,action,to,options={}){const h=t.hand,seat=h.actor,l=legal(t,seat);if(!l)throw new Error('Não é hora de agir.');
- if(!['fold','check','call','raise'].includes(action)||action==='check'&&!l.check||action==='call'&&!l.call||action==='raise'&&(!l.raise||!Number.isInteger(to)||to<l.minTo||to>l.maxTo))throw new Error('Ação ou valor inválido.');
+ if(!['fold','check','call','raise'].includes(action)||action==='check'&&!l.check||action==='call'&&!l.call||action==='raise'&&(!l.raise||!Number.isInteger(to)||to<l.minTo||to>l.maxTo||(to%25!==0&&!(l.allIn&&to===l.maxTo))))throw new Error('Ação ou valor inválido.');
  if(seat===0){const context=publicSpot(t),ref=reference(context);h.decisions.push({id:h.decisions.length+1,context,action,to:action==='raise'?bb(to):null,correct:ref.accepted.includes(action),...ref,assisted:h.assisted});h.assisted=false;}
  let amount=0;const previousBet=h.currentBet;
  if(action==='fold')h.folded[seat]=true;
@@ -122,5 +123,5 @@ function step(t){const h=t.hand;if(!h||h.phase==='finished')return false;
 function runToHero(t,max=500){let steps=0;while(steps++<max&&step(t)){}if(steps>=max)throw new Error('Limite de ações excedido.');return t.hand;}
 function rebuy(t){if(t.hand&&t.hand.phase!=='finished')return false;t.players[0].stack+=2000;t.contributions=(t.contributions??t.initialBankroll)+2000;t.rebuyCount++;t.ledger||=[];t.ledger.push({type:'rebuy',net:t.reserve+t.players[0].stack-t.contributions});return true;}
 function visible(t){const h=t.hand;if(!h)return null;return {number:h.number,kind:h.kind,phase:h.phase,street:h.street,dealer:t.dealer,actor:h.actor,pot:bb(pot(t)),centerPot:bb(Math.max(0,pot(t)-h.wagers.reduce((a,b)=>a+b,0))),board:h.board.slice(0,h.visible),event:h.event,players:t.players.map((p,i)=>({seat:i,name:p.name,stack:bb(p.stack),position:position(t,i),folded:h.folded[i],wager:bb(h.wagers[i]),dealt:h.dealt[i],cards:i===0?h.holes[i].slice(0,h.dealt[i]):h.phase==='finished'||(h.phase==='settle'&&h.revealedSeats?.includes(i))?h.holes[i]:null,allIn:p.stack===0})),legal:h.actor===0?legal(t,0):null};}
-return {minimum,rake,make,upgrade,start,step,act,legal,position,pot,visible,runToHero,rebuy,publicSpot,reference,equity,holePower,payoutPlan,revealedHands,bb,money,STREETS};
+return {sizing,minimum,rake,make,upgrade,start,step,act,legal,position,pot,visible,runToHero,rebuy,publicSpot,reference,equity,holePower,payoutPlan,revealedHands,bb,money,STREETS};
 });

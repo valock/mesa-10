@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.3.2 — 2026-11-01
+- Apostas e aumentos em múltiplos de R$ 0,25, incluindo bots e atalhos.
+- Exceção explícita para all-in com saldo exato; rake permanece em centavos.
+
 ## 2.3.1 — 2026-11-01
 - Reentrada de R$ 20,00 sem repetir a taxa inicial de R$ 2,00.
 - Investimento acumulado cresce junto com as fichas; reentrada não altera lucro/prejuízo.

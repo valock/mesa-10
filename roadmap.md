@@ -1,6 +1,6 @@
 # Roadmap · Mesa 10
 
-Atualizado para v2.3.1. Itens futuros; sem prazo prometido.
+Atualizado para v2.3.2. Itens futuros; sem prazo prometido.
 
 ## Entregue
 - [x] Nove jogadores; ciclos de oito Hold’em e um Omaha.
