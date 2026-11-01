@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.3.3 — 2026-11-01
+- Omaha a cada dez mãos (9 Hold’em + 1 Omaha), independente do giro dos nove assentos.
+- Preserva integralmente mão aberta, saldo, histórico e estado salvo; só novas mãos usam a nova frequência.
+
 ## 2.3.2 — 2026-11-01
 - Apostas e aumentos em múltiplos de R$ 0,25, incluindo bots e atalhos.
 - Exceção explícita para all-in com saldo exato; rake permanece em centavos.

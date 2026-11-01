@@ -12,7 +12,7 @@ test('recarregar durante a revelação não repete carta, pagamento ou históric
   const copy=JSON.parse(JSON.stringify(t));C.runToHero(t);C.runToHero(copy);assert.deepEqual(copy.players,t.players);assert.deepEqual(copy.hand.revealedSeats,t.hand.revealedSeats);assert.equal(copy.hand.events.filter(e=>e.type==='show-cards').length,9);assert.equal(copy.history.length,1);
 });
 test('showdown Omaha conserva o resultado e registra exatamente 2 próprias + 3 da mesa',()=>{
-  const t=C.make({},14);t.number=8;t.dealer=8;deal(t);let guard=0;
+  const t=C.make({},14);t.number=9;t.dealer=8;deal(t);let guard=0;
   while(t.hand.phase!=='finished'&&guard++<300){if(t.hand.phase==='betting'){const legal=C.legal(t,t.hand.actor);C.act(t,legal.call?'call':'check');}else C.step(t);}
   assert.equal(t.hand.phase,'finished');assert.equal(t.hand.showdown,true);assert.equal(t.hand.visible,5);assert.equal(t.players.reduce((sum,p)=>sum+p.stack,0),18000);
   const record=t.history[0];assert.equal(record.revealed.length,9);for(const p of record.revealed){assert.equal(p.cards.length,4);assert.equal(p.combination.holeUsed.length,2);assert.equal(p.combination.boardUsed.length,3);assert.ok(p.combination.boardUsed.every(c=>record.board.includes(c)));}

@@ -26,13 +26,13 @@ function position(t,seat=0){return POS[(seat-t.dealer+9)%9];}
 function live(h){return h.folded.map((f,i)=>!f?i:-1).filter(i=>i>=0);}
 function pot(t){const h=t.hand;return h?h.dead+h.total.reduce((a,b)=>a+b,0)-h.distributed:0;}
 function log(t,type,seat=null,amount=0,extra={}){const h=t.hand;const ev={id:h.events.length+1,type,seat,amount,street:h.street,...extra};h.events.push(ev);h.event=ev;return ev;}
-function minimum(t){return (t.number+1)%9===0?100:25;}
+function minimum(t){return (t.number+1)%10===0?100:25;}
 function start(t){
  if(t.hand&&t.hand.phase!=='finished')throw new Error('Conclua a mão atual.');
  if(t.players[0].stack<minimum(t))return false;
  if(t.number)t.dealer=(t.dealer+1)%9;
  for(let i=1;i<9;i++)if(t.players[i].stack<minimum(t)){const add=2000-t.players[i].stack;t.players[i].stack+=add;t.botRefills+=add;}
- t.number++;const kind=t.number%9===0?'omaha':'holdem',deck=E.shuffle(E.deck(),()=>rand(t)),count=kind==='omaha'?4:2;
+ t.number++;const kind=t.number%10===0?'omaha':'holdem',deck=E.shuffle(E.deck(),()=>rand(t)),count=kind==='omaha'?4:2;
  const holes=Array.from({length:9},()=>[]);for(let r=0;r<count;r++)for(let off=1;off<=9;off++)holes[(t.dealer+off)%9].push(deck.pop());
  const board=deck.splice(0,5);
  t.hand={id:t.id+'-'+t.number,number:t.number,kind,dealer:t.dealer,rule:t.config.rule,atmosphere:t.config.atmosphere,phase:'posting',street:0,board,visible:0,holes,dealt:[0,0,0,0,0,0,0,0,0],startStacks:t.players.map(p=>p.stack),total:[0,0,0,0,0,0,0,0,0],wagers:[0,0,0,0,0,0,0,0,0],folded:[false,false,false,false,false,false,false,false,false],dead:0,distributed:0,currentBet:0,lastRaise:kind==='omaha'?100:25,acted:[false,false,false,false,false,false,false,false,false],actedAt:[0,0,0,0,0,0,0,0,0],pending:[false,false,false,false,false,false,false,false,false],actor:null,events:[],decisions:[],postIndex:0,dealIndex:0,roundRaises:0,payouts:null,settleIndex:0,showdown:false,assisted:false,mood:(rand(t)-.5)*(t.config.atmosphere==='wild'?.6:.14),finishedAt:null};

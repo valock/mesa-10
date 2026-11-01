@@ -1,9 +1,9 @@
 # Roadmap · Mesa 10
 
-Atualizado para v2.3.2. Itens futuros; sem prazo prometido.
+Atualizado para v2.3.3. Itens futuros; sem prazo prometido.
 
 ## Entregue
-- [x] Nove jogadores; ciclos de oito Hold’em e um Omaha.
+- [x] Nove jogadores; ciclos de nove Hold’em e um Omaha.
 - [x] Reais simulados, entrada de R$ 22, reentradas de R$ 20 sem nova taxa, blind R$ 0,25 / R$ 1 e rake de 5% acima de R$ 10.
 - [x] Gráfico líquido, dicas com fundamentos GTO, PWA e revisão das cartas.
 
