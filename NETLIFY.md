@@ -2,47 +2,45 @@
 
 O ZIP contém o aplicativo completo, as duas Netlify Functions e os testes. Não precisa de Neon. A chave da API será cadastrada no painel do Netlify, como variável de ambiente disponível às Functions — não dentro do código da função.
 
-## 1. Preparar o projeto no computador
+## 1. Enviar pelo site do GitHub
 
-1. Baixe `mesa-10-netlify.zip` na aba **Publicar** do app.
-2. Extraia o ZIP. Abra a pasta `mesa-10`, onde ficam `package.json` e `netlify.toml`.
-3. Instale [Git](https://git-scm.com/downloads) e [Node.js](https://nodejs.org/en/download) 22 ou superior.
-4. Abra o Terminal nessa pasta. No Windows, pode usar o terminal do VS Code; no macOS, o Terminal.
-5. Execute, uma linha por vez:
+Seu repositório: **[github.com/valock/mesa-10](https://github.com/valock/mesa-10)**.
+
+1. Baixe o ZIP entregue junto com esta versão e extraia a pasta `mesa-10`.
+2. No repositório, escolha **Add file → Upload files** (ou o link para enviar arquivos se o repositório estiver vazio).
+3. Envie o **conteúdo de dentro da pasta `mesa-10`**. `package.json`, `README.md` e `netlify.toml` precisam aparecer na raiz do repositório, ao lado de `dist/`, `netlify/`, `scripts/` e `tests/`. Não envie apenas o ZIP nem coloque uma pasta extra em volta de todo o projeto.
+4. Inclua também `docs/`, `.github/`, `.gitignore`, `.env.example`, `.editorconfig` e `.gitattributes`. O explorador de arquivos pode ocultar nomes começados por ponto. O fluxo de envio de pastas é mais simples no navegador do computador.
+5. Se você criou um README pelo GitHub, substitua-o pelo README deste pacote. Escreva uma mensagem como **Mesa 10: PWA e revisão de mãos** e confirme em **Commit changes**.
+6. Confira se o README aparece formatado na página inicial e se a aba **Actions** executa **Verificar Mesa 10**, caso os workflows estejam habilitados.
+
+O ZIP inclui apenas fonte e recursos públicos. Não inclui `.git`, identidade da prévia, chaves, histórico pessoal ou `.env` preenchido. `.env.example` é somente um modelo sem segredo. Para os próximos envios, confira os arquivos de configuração antes do commit.
+
+## 2. Alternativa com Git no computador
+
+Se você já criou o repositório no GitHub, clone primeiro para preservar o que está lá:
+
+```sh
+git clone https://github.com/valock/mesa-10.git
+cd mesa-10
+```
+
+Copie o conteúdo extraído do ZIP para essa pasta, sem apagar a pasta interna `.git`. Com Node.js 22 ou superior instalado, execute:
 
 ```sh
 npm test
 npm run build
-```
-
-Os testes devem terminar sem falhas. Não é necessário instalar pacotes do navegador. O build atualiza `dist/mesa-10.html`.
-
-## 2. Criar o repositório no GitHub
-
-1. Entre em [github.com](https://github.com) e escolha **New repository**.
-2. Nome: `mesa-10`. Pode ser privado ou público, conforme sua preferência.
-3. Crie o repositório **vazio**, sem adicionar README, licença ou `.gitignore`; o projeto já inclui seus próprios arquivos.
-4. Na pasta local, execute:
-
-```sh
-git init -b main
 git add .
-git commit -m "Mesa 10: treino cash e calibração"
-git remote add origin https://github.com/SEU_USUARIO/mesa-10.git
-git push -u origin main
+git commit -m "Mesa 10: PWA e revisão de mãos"
+git push
 ```
 
-Substitua `SEU_USUARIO` pelo seu usuário do GitHub. Se o Git pedir sua identidade no primeiro commit, configure seu nome/e-mail seguindo a mensagem do terminal. Para autenticar, use a tela do GitHub/Git Credential Manager ou GitHub Desktop; não use a senha da conta como token de Git.
-
-**Alternativa sem comandos de Git:** no GitHub Desktop, use **File → Add local repository**, selecione a pasta, crie o repositório se solicitado, faça o primeiro commit e escolha **Publish repository**. Confira os arquivos antes de publicar.
-
-Devem subir: `dist/`, `netlify/`, `scripts/`, `tests/`, `package.json`, `netlify.toml`, `.gitignore`, `.env.example` e os guias. **Não suba `.env` com chaves reais.** O ZIP não inclui `.git` nem a identidade da hospedagem de prévia.
+Não é necessário `npm install`: esta versão não tem dependências npm. Se o Git solicitar autenticação, use o fluxo oficial do GitHub ou GitHub Desktop. O projeto não precisa de um token de GitHub no código.
 
 ## 3. Importar no Netlify
 
 1. Acesse [app.netlify.com](https://app.netlify.com).
 2. Escolha **Add new project → Import an existing project**.
-3. Selecione GitHub, autorize o acesso ao repositório `mesa-10` e escolha esse repositório.
+3. Selecione GitHub, autorize o acesso ao repositório `valock/mesa-10` e escolha esse repositório.
 4. Confira as configurações:
 
 | Campo | Valor |
@@ -99,7 +97,7 @@ Para diagnóstico de configuração, abra `https://SEU_SITE.netlify.app/api/cali
 | --- | --- |
 | Página em branco ao abrir arquivo no iPhone | Use o endereço HTTPS hospedado; visualizadores de arquivos podem bloquear JavaScript. |
 | `404` em `/api/calibration` | As Functions foram incluídas? Foi usado o repositório completo, com `netlify/functions`? |
-| “A IA precisa da chave” / `not_configured` | Nome exato `GEMINI_API_KEY`, escopo Functions, Production e novo deploy. |
+| Revisão com IA indisponível / `not_configured` | Nome exato `GEMINI_API_KEY`, escopo Functions, Production e novo deploy. |
 | `ready: true`, mas a análise falha | Validade/restrições da chave, modelo disponível e logs da função no Netlify. |
 | Cota atingida / `429` | Limites do Google ou limite por IP da Function. Aguarde a renovação da cota; o app não repete automaticamente. |
 | Timeout | A resposta excedeu o tempo limite. Continue pelo diagnóstico local e tente depois. |
@@ -119,9 +117,15 @@ git commit -m "Melhorias no treino cash"
 git push
 ```
 
-O Netlify recebe o push e cria um novo deploy. Se também quiser atualizar o ZIP disponível para baixar no app, execute `python3 scripts/package-netlify.py` antes do `git add`. Python é necessário apenas para recriar esse pacote.
+O Netlify recebe o push e cria um novo deploy. Para gerar um novo ZIP de distribuição, execute `npm run package` (requer Python 3). O ZIP fica em `dist/mesa-10-netlify.zip` e não é necessário para o deploy por Git.
 
-## 8. Dados, custos e evolução com Neon
+Quem já instalou o PWA verá **Salvar e atualizar** quando o navegador detectar a nova versão. O app não recarrega automaticamente durante a mão. Abrir novamente com internet também permite a detecção. Veja [PWA.md](PWA.md).
+
+## 8. Instalar no celular
+
+Abra o endereço final do **Netlify** no celular. No iPhone use o Safari; no Android, o Chrome. O guia completo está em **[PWA.md](PWA.md)**. Instale antes de iniciar o histórico principal e aguarde a confirmação de acesso offline nas configurações do app. A instalação de outro domínio usa outro armazenamento.
+
+## 9. Dados, custos e evolução com Neon
 
 Esta versão salva no navegador. Não há login ou banco remoto. Mesas arquivadas permanecem nesse armazenamento; limpar dados do site remove o progresso. Teste atualizações no mesmo domínio para continuar seu histórico.
 

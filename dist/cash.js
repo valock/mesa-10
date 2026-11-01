@@ -1,15 +1,26 @@
-/* Mesa 10 · mesa contínua. Valores internos em centésimos de BB. */
+/* Mesa 10 · mesa contínua. Valores internos em centésimos de ficha. */
 (function(root,factory){const api=factory(typeof module==='object'&&module.exports?require('./engine.js'):root.MesaEngine);if(typeof module==='object'&&module.exports)module.exports=api;else root.MesaCash=api;})(typeof globalThis!=='undefined'?globalThis:this,function(E){
 'use strict';
-const POS=['BTN','SB','BB','UTG','HJ','CO'];
+const POS=['BTN','UTG','UTG+1','MP','HJ','CO'];
 const STREETS=['Pré-flop','Flop','Turn','River'];
 const money=n=>Math.round(n*100),bb=n=>n/100;
 const clamp=(n,a,b)=>Math.max(a,Math.min(b,n));
 function rand(t){let x=t.seed|0;x^=x<<13;x^=x>>>17;x^=x<<5;t.seed=x>>>0;return t.seed/4294967296;}
 function make(options={},seed=Math.floor(E.random()*4294967295)||17){
- const t={version:2,id:'cash-'+Date.now().toString(36)+'-'+seed,seed:seed||17,config:{rule:options.rule==='blinds'?'blinds':'button',atmosphere:['mixed','pressure','wild'].includes(options.atmosphere)?options.atmosphere:'mixed'},players:[],dealer:0,number:0,hand:null,history:[],reserve:90000,initialBankroll:100000,rebuyCount:0,botRefills:0,reportSeen:0};
+ const t={version:3,ruleStart:0,id:'cash-'+Date.now().toString(36)+'-'+seed,seed:seed||17,config:{rule:'button',atmosphere:['mixed','pressure','wild'].includes(options.atmosphere)?options.atmosphere:'mixed'},players:[],dealer:0,number:0,hand:null,history:[],reserve:90000,initialBankroll:100000,rebuyCount:0,botRefills:0,reportSeen:0};
  const names=['Você','Léo','Nina','Rafa','Bia','Caio'],styles=E.shuffle([{loose:.35,aggression:.65},{loose:.7,aggression:.22},{loose:.55,aggression:.8},{loose:.3,aggression:.4},{loose:.75,aggression:.55}],()=>rand(t));
  t.players=names.map((name,i)=>({id:i,name,stack:10000,...(i?{style:styles[i-1]}:{})}));t.dealer=Math.floor(rand(t)*6);return t;
+}
+// Preserve completed results; refund and retain one unfinished hand from the old rules.
+function upgrade(t){
+ if(t.version>=3)return false;
+ const h=t.hand;let refunded=false;
+ if(h&&h.phase!=='finished'){
+  t.cancelledHands||=[];t.cancelledHands.push({...h,cancelledAt:new Date().toISOString(),reason:'Atualização da regra de entrada',endStacks:t.players.map(p=>p.stack)});
+  t.players.forEach((p,i)=>p.stack=h.startStacks[i]);
+  t.number=Math.max(0,h.number-1);t.dealer=t.number?(h.dealer+5)%6:h.dealer;t.hand=null;refunded=true;
+ }
+ t.config.rule='button';t.version=3;t.ruleStart=t.history.length;t.reportSeen=0;t.ruleNotice={refunded};return true;
 }
 function position(t,seat=0){return POS[(seat-t.dealer+6)%6];}
 function live(h){return h.folded.map((f,i)=>!f?i:-1).filter(i=>i>=0);}
@@ -33,7 +44,7 @@ function settleRound(t){const h=t.hand;if(live(h).length===1){h.phase='collect';
  const next=orderNext(t,h.actor??t.dealer);if(next===null){h.phase='collect';h.actor=null;}else h.actor=next;
 }
 function beginRound(t){const h=t.hand;h.phase='betting';h.pending=t.players.map((p,i)=>p.stack>0&&!h.folded[i]);h.acted=Array(6).fill(false);h.actedAt=Array(6).fill(0);h.roundRaises=0;
- h.actor=h.street===0&&t.config.rule==='blinds'?(t.dealer+2)%6:t.dealer;settleRound(t);
+ h.actor=t.dealer;settleRound(t);
 }
 function legal(t,seat=t.hand.actor){const h=t.hand;if(h.phase!=='betting'||seat===null||seat!==h.actor)return null;
  const stack=t.players[seat].stack,call=Math.min(stack,Math.max(0,h.currentBet-h.wagers[seat]));
@@ -63,9 +74,9 @@ function equity(spot){const key=JSON.stringify([spot.kind,spot.cards,spot.board,
  const result={value:score/n,samples:n};if(equityCache.size>150)equityCache.clear();equityCache.set(key,result);return result;
 }
 function reference(s){const price=s.toCall/(s.pot+s.toCall)||0;let expected,accepted,reason,theme,eq=null;
- if(s.street===0){const power=holePower(s.cards),pos=s.position==='BB'?'SB':s.position;
-  if(!s.opened){const open=s.kind==='holdem'?E.recommended(pos,s.cards)==='raise':power>=.62;expected=open&&s.canRaise?'raise':s.canCheck?'check':'fold';theme='selection';reason=s.kind==='holdem'?`${E.handClass(s.cards)} no ${s.position}: referência de seleção por posição. ${s.rule==='button'?'O ante do botão altera o pote; esta faixa é apenas uma aproximação.':'Faixa didática de abertura, sem rake.'}`:'No Omaha, priorize cartas conectadas, pares altos e naipes que trabalhem juntos. Referência heurística de seleção.';}
-  else{expected=power>=.87&&s.canRaise?'raise':power>=(s.kind==='omaha'?.61:.57)?s.toCall?'call':s.canRaise?'raise':'check':s.canCheck?'check':'fold';theme=s.position==='BB'||s.position==='SB'?'defense':'selection';reason='Ao enfrentar aumento, a referência fica mais seletiva. Força inicial, posição e preço importam; não é um range de defesa resolvido por solver.';}
+ if(s.street===0){const power=holePower(s.cards),pos=({'UTG+1':'UTG',MP:'HJ',BB:'SB'})[s.position]||s.position;
+  if(!s.opened){const open=s.kind==='holdem'?E.recommended(pos,s.cards)==='raise':power>=.62;expected=open&&s.canRaise?'raise':s.canCheck?'check':'fold';theme='selection';reason=s.kind==='holdem'?`${E.handClass(s.cards)} no ${s.position}: referência de seleção por posição. ${s.rule==='button'?'A entrada do dealer já vale como aposta. Esta faixa por ordem de ação é apenas uma aproximação para a regra da mesa.':'Faixa didática de abertura, sem rake.'}`:'No Omaha, priorize cartas conectadas, pares altos e naipes que trabalhem juntos. Referência heurística de seleção.';}
+  else{expected=power>=.87&&s.canRaise?'raise':power>=(s.kind==='omaha'?.61:.57)?s.toCall?'call':s.canRaise?'raise':'check':s.canCheck?'check':'fold';theme='defense';reason='Ao enfrentar aumento, a referência fica mais seletiva. Força inicial, posição e preço importam; não é um range de defesa resolvido por solver.';}
   accepted=[expected];
  }else{eq=equity(s).value;const made=(s.kind==='omaha'?E.bestOmaha:E.bestHoldem)(s.cards,s.board);
   if(s.toCall){expected=eq>=price?'call':'fold';accepted=Math.abs(eq-price)<=.07?['call','fold']:[expected];if(eq>.82&&s.canRaise)accepted.push('raise');theme='price';reason=`Equidade estimada ${Math.round(eq*100)}% contra ${s.opponents} mão(s) aleatória(s); preço ${Math.round(price*100)}%. No flop/turn, apostas futuras podem mudar o valor de pagar. A faixa não foi ajustada ao perfil do adversário.`;}
@@ -91,20 +102,21 @@ function payoutPlan(t){const h=t.hand,contenders=live(h),result=[],evaluated={};
  {if(h.dead)award(h.dead,contenders,'Ante do botão');let prev=0;const levels=[...new Set(h.total.filter(n=>n>0))].sort((a,b)=>a-b);for(const level of levels){const contributors=h.total.map((n,i)=>n>=level?i:-1).filter(i=>i>=0),amount=(level-prev)*contributors.length;prev=level;if(contributors.length===1)result.push({seat:contributors[0],amount,type:'refund',label:'Aposta não paga'});else award(amount,contributors.filter(i=>!h.folded[i]),result.length?'Pote lateral':'Pote principal');}}
  h.evaluated=Object.fromEntries(Object.entries(evaluated).map(([i,v])=>[i,{name:v.name,holeUsed:v.holeUsed,boardUsed:v.boardUsed,vector:v.vector}]));return result;
 }
+function revealedHands(t){const h=t.hand;if(!h||!['settle','finished'].includes(h.phase))return [];const board=h.board.slice(0,h.visible);return h.holes.map((hole,seat)=>{const evaluated=board.length>=3?(h.kind==='omaha'?E.bestOmaha:E.bestHoldem)(hole,board):null;return {seat,name:t.players[seat].name,position:position(t,seat),cards:[...hole],folded:h.folded[seat],won:(h.payouts||[]).some(p=>p.seat===seat&&p.type==='award'),combination:evaluated?{name:evaluated.name,holeUsed:evaluated.holeUsed,boardUsed:evaluated.boardUsed}:null};});}
 function finish(t){const h=t.hand;h.phase='finished';h.actor=null;h.finishedAt=new Date().toISOString();h.delta=t.players[0].stack-h.startStacks[0];h.endStacks=t.players.map(p=>p.stack);
- const record={id:h.id,number:h.number,kind:h.kind,rule:h.rule,atmosphere:h.atmosphere,position:position(t),delta:bb(h.delta),stack:bb(t.players[0].stack),bankroll:bb(t.reserve+t.players[0].stack),cards:[...h.holes[0]],board:h.board.slice(0,h.visible),decisions:JSON.parse(JSON.stringify(h.decisions)),events:h.events.filter(e=>!['deal','reveal','button'].includes(e.type)),payouts:h.payouts,finishedAt:h.finishedAt};t.history.push(record);log(t,'finished',0,h.delta);
+ const record={id:h.id,number:h.number,kind:h.kind,rule:h.rule,atmosphere:h.atmosphere,position:position(t),delta:bb(h.delta),stack:bb(t.players[0].stack),bankroll:bb(t.reserve+t.players[0].stack),cards:[...h.holes[0]],board:h.board.slice(0,h.visible),showdown:h.showdown,revealed:revealedHands(t),decisions:JSON.parse(JSON.stringify(h.decisions)),events:h.events.filter(e=>!['deal','reveal','button'].includes(e.type)),payouts:h.payouts,finishedAt:h.finishedAt};t.history.push(record);log(t,'finished',0,h.delta);
 }
 function step(t){const h=t.hand;if(!h||h.phase==='finished')return false;
- if(h.phase==='posting'){const posts=t.config.rule==='button'?[{seat:t.dealer,amount:100,dead:true}]:[{seat:(t.dealer+1)%6,amount:50},{seat:(t.dealer+2)%6,amount:100}];const post=posts[h.postIndex++];if(post){const n=spend(t,post.seat,post.amount,post.dead);h.currentBet=Math.max(...h.wagers);log(t,post.dead?'ante':'blind',post.seat,n);return true;}h.phase='dealing';}
+ if(h.phase==='posting'){const posts=[{seat:t.dealer,amount:100}];const post=posts[h.postIndex++];if(post){const n=spend(t,post.seat,post.amount,post.dead);h.currentBet=Math.max(...h.wagers);log(t,'entry',post.seat,n);return true;}h.phase='dealing';}
  if(h.phase==='dealing'){const count=h.kind==='omaha'?4:2;if(h.dealIndex<count*6){const seat=(t.dealer+1+h.dealIndex)%6;h.dealt[seat]++;h.dealIndex++;log(t,'deal',seat);return true;}beginRound(t);return true;}
  if(h.phase==='betting'){if(h.actor===0)return false;if(h.actor===null){settleRound(t);return true;}const choice=bot(t,h.actor);act(t,choice.action,choice.to);return true;}
  if(h.phase==='collect'){const amounts=[...h.wagers];h.wagers.fill(0);h.currentBet=0;h.lastRaise=100;log(t,'collect',null,amounts.reduce((a,b)=>a+b,0),{amounts});if(live(h).length===1||h.street===3){h.showdown=live(h).length>1;h.phase='settle';}else{h.street++;h.phase='reveal';}return true;}
  if(h.phase==='reveal'){const count=h.street+2;if(h.visible<count){h.visible++;log(t,'reveal',null,0,{cardIndex:h.visible-1});return true;}beginRound(t);return true;}
- if(h.phase==='settle'){if(!h.payouts){h.payouts=payoutPlan(t);log(t,'showdown');return true;}const pay=h.payouts[h.settleIndex++];if(pay){t.players[pay.seat].stack+=pay.amount;h.distributed+=pay.amount;log(t,pay.type,pay.seat,pay.amount,{label:pay.label});return true;}finish(t);return true;}
+ if(h.phase==='settle'){h.revealedSeats ||= [];if(h.revealedSeats.length<6){const seat=(t.dealer+1+h.revealedSeats.length)%6;h.revealedSeats.push(seat);log(t,'show-cards',seat);return true;}if(!h.payouts){h.payouts=payoutPlan(t);log(t,'showdown');return true;}const pay=h.payouts[h.settleIndex++];if(pay){t.players[pay.seat].stack+=pay.amount;h.distributed+=pay.amount;log(t,pay.type,pay.seat,pay.amount,{label:pay.label});return true;}finish(t);return true;}
  return false;
 }
 function runToHero(t,max=500){let steps=0;while(steps++<max&&step(t)){}if(steps>=max)throw new Error('Limite de ações excedido.');return t.hand;}
 function rebuy(t){if(t.hand&&t.hand.phase!=='finished')return false;const amount=Math.min(10000,t.reserve);if(amount<100)return false;t.reserve-=amount;t.players[0].stack+=amount;t.rebuyCount++;return true;}
-function visible(t){const h=t.hand;if(!h)return null;return {number:h.number,kind:h.kind,phase:h.phase,street:h.street,dealer:t.dealer,actor:h.actor,pot:bb(pot(t)),centerPot:bb(Math.max(0,pot(t)-h.wagers.reduce((a,b)=>a+b,0))),board:h.board.slice(0,h.visible),event:h.event,players:t.players.map((p,i)=>({seat:i,name:p.name,stack:bb(p.stack),position:position(t,i),folded:h.folded[i],wager:bb(h.wagers[i]),dealt:h.dealt[i],cards:i===0?h.holes[i].slice(0,h.dealt[i]):h.showdown&&!h.folded[i]?h.holes[i]:null,allIn:p.stack===0})),legal:h.actor===0?legal(t,0):null};}
-return {make,start,step,act,legal,position,pot,visible,runToHero,rebuy,publicSpot,reference,equity,holePower,payoutPlan,bb,money,STREETS};
+function visible(t){const h=t.hand;if(!h)return null;return {number:h.number,kind:h.kind,phase:h.phase,street:h.street,dealer:t.dealer,actor:h.actor,pot:bb(pot(t)),centerPot:bb(Math.max(0,pot(t)-h.wagers.reduce((a,b)=>a+b,0))),board:h.board.slice(0,h.visible),event:h.event,players:t.players.map((p,i)=>({seat:i,name:p.name,stack:bb(p.stack),position:position(t,i),folded:h.folded[i],wager:bb(h.wagers[i]),dealt:h.dealt[i],cards:i===0?h.holes[i].slice(0,h.dealt[i]):h.phase==='finished'||(h.phase==='settle'&&h.revealedSeats?.includes(i))?h.holes[i]:null,allIn:p.stack===0})),legal:h.actor===0?legal(t,0):null};}
+return {make,upgrade,start,step,act,legal,position,pot,visible,runToHero,rebuy,publicSpot,reference,equity,holePower,payoutPlan,revealedHands,bb,money,STREETS};
 });

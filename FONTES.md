@@ -1,6 +1,6 @@
 # Mesa 10: fontes, regras e premissas
 
-Versão 2.0, revisada em 01/11/2026. O aplicativo é independente e usa tabelas e heurísticas próprias. As referências orientam os fundamentos; não constituem endosso ou certificação GTO.
+Versão 2.1, revisada em 01/11/2026. O aplicativo é independente e usa tabelas e heurísticas próprias. As referências orientam os fundamentos; não constituem endosso ou certificação GTO.
 
 ## Referências de poker
 
@@ -9,21 +9,23 @@ Versão 2.0, revisada em 01/11/2026. O aplicativo é independente e usa tabelas 
 - [PokerStars: regras do Omaha](https://www.pokerstars.com/pt-BR/poker/games/omaha/)
 - [PokerStars: ranking e desempates](https://www.pokerstars.com/poker/games/rules/hand-rankings/)
 
-As faixas da grade de 169 classes são simplificações próprias de RFI em 6-max com 100 BB, sem ante/rake. Não são transcrições certificadas dessas fontes. Os percentuais ponderam 6 combos por par, 4 por suited e 12 por offsuit, totalizando 1.326. O SB usa raise/fold como convenção; não há RFI padrão do BB após todos desistirem.
+As faixas da grade de 169 classes são simplificações próprias de RFI em 6-max com 100 fichas, sem ante/rake. Não são transcrições certificadas dessas fontes. Os percentuais ponderam 6 combos por par, 4 por suited e 12 por offsuit, totalizando 1.326. Na grade dos exercícios anteriores, o SB usa raise/fold como convenção. A nova grade cash usa somente as posições sem blinds descritas abaixo.
 
-## Cash contínuo da versão 2.0
+## Cash contínuo da versão 2.1
 
 ### Cobrança e posição
 
-O padrão pedido para o projeto é **ante do botão**: apenas o dealer paga 1 BB obrigatório. Sem blinds obrigatórios. Esse pagamento vai diretamente ao pote, não completa apostas voluntárias e não conta como VPIP. A ação começa à esquerda do botão em todas as rodadas. SB/BB continuam sendo nomes dos assentos relativos ao botão; nesse modo não implicam cobrança. O ante é disputado pelos jogadores que não desistiram. É uma regra própria, diferente do cash tradicional.
+A regra desta mesa é **entrada pelo dealer**: o botão coloca 1 ficha como aposta inicial viva. Os demais jogadores precisam pagar essa entrada, aumentar ou desistir antes do flop. Se houver aumento, é preciso igualar a aposta vigente ou estar all-in. O dealer já tem a entrada creditada e só paga uma diferença adicional, quando houver. Um check pré-flop só é possível para quem já igualou a aposta; nunca significa entrada gratuita.
 
-O modo opcional tradicional usa SB 0,5 BB e BB 1 BB, com UTG primeiro no pré-flop. Em ambos, o botão gira uma cadeira por mão. O herói permanece visualmente embaixo. O botão não paga as apostas voluntárias dos outros jogadores.
+Não há small blind ou big blind no formato solicitado. As posições relativas ao botão são BTN, UTG, UTG+1, MP, HJ e CO. A ação começa à esquerda do dealer em todas as rodadas e o botão gira uma cadeira por mão. O herói permanece visualmente embaixo. Essa é a regra específica do simulador; não é uma afirmação sobre todos os formatos de cash game.
+
+A nomenclatura de fichas substitui BB na interface cash. A migração mantém o histórico concluído; uma mão antiga incompleta é cancelada, preservada e integralmente estornada antes de redistribuir. O diagnóstico inicia uma amostra da regra atual, mantendo os resultados anteriores no histórico e no gráfico da banca.
 
 ### Fichas e distribuição
 
-O herói começa com 100 BB na mesa e 900 BB de reserva. Reentrar transfere até 100 BB da reserva, sem apagar perdas. Os bots abaixo de 1 BB recompõem seus stacks entre mãos; esses acréscimos são registrados pelo motor e não entram na banca do herói. Não há rake.
+O herói começa com 100 fichas na mesa e 900 fichas de reserva. Reentrar transfere até 100 fichas da reserva, sem apagar perdas. Os bots abaixo de 1 ficha recompõem seus stacks entre mãos; esses acréscimos são registrados pelo motor e não entram na banca do herói. Não há rake.
 
-O motor usa centésimos de BB, conserva fichas por mão, devolve a parte não paga de uma aposta e distribui potes laterais somente entre elegíveis. Em empates, centésimos indivisíveis seguem a ordem a partir da esquerda do botão. Um all-in inferior ao aumento mínimo não reabre automaticamente o direito de aumentar para quem já agiu.
+O motor usa centésimos de ficha, conserva fichas por mão, devolve a parte não paga de uma aposta e distribui potes laterais somente entre elegíveis. Em empates, centésimos indivisíveis seguem a ordem a partir da esquerda do botão. Um all-in inferior ao aumento mínimo não reabre automaticamente o direito de aumentar para quem já agiu.
 
 No Omaha, o aumento máximo é limitado ao pote após pagar. O intervalo legal também respeita o stack e o aumento mínimo; o botão de all-in só aparece se esse valor couber no limite do pote.
 
@@ -35,7 +37,7 @@ Os climas Mesa mista, Pressão alta e Imprevisível mudam probabilidades e taman
 
 ### Referência didática
 
-Pré-flop: a abertura usa as faixas próprias por posição. A defesa e a seleção de Omaha usam pontuação heurística de força inicial. A cobrança no botão, stacks diferentes e ações anteriores alteram a estratégia; as faixas não foram resolvidas para cada contexto.
+Pré-flop: a abertura usa as faixas próprias por ordem de ação. UTG+1 usa a referência de UTG; MP usa a de HJ; as demais posições preservam sua faixa homônima. A defesa e a seleção de Omaha usam pontuação heurística de força inicial. A entrada pelo botão, stacks diferentes e ações anteriores alteram a estratégia; as faixas não foram resolvidas para cada contexto.
 
 Pós-flop: 200 simulações em Hold’em e 120 em Omaha, com semente derivada somente das cartas próprias, board visível, modalidade e número de oponentes. Adversários recebem mãos uniformemente aleatórias sem cartas repetidas. As mãos ocultas reais e o runout futuro não entram no cálculo. Não há condicionamento por ação, posição, stack ou perfil. Portanto, equidade contra essas mãos aleatórias não é equidade contra uma faixa realista de call.
 

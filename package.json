@@ -1,13 +1,22 @@
 {
   "name": "mesa-10",
-  "version": "2.0.0",
+  "version": "2.2.0",
   "private": true,
   "description": "Cash game contínuo com calibração, bankroll simulado e Coach Gemini opcional.",
   "scripts": {
     "test": "node --test tests/*.test.cjs",
-    "build": "node scripts/build.cjs"
+    "build": "node scripts/build.cjs",
+    "dev": "node scripts/dev.cjs",
+    "package": "npm run build && python3 scripts/package-netlify.py"
   },
   "engines": {
     "node": ">=22"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/valock/mesa-10.git"
+  },
+  "bugs": {
+    "url": "https://github.com/valock/mesa-10/issues"
   }
 }

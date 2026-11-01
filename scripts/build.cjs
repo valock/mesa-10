@@ -1,5 +1,13 @@
-const fs=require('node:fs'),path=require('node:path');
-const root=path.resolve(__dirname,'..');let html=fs.readFileSync(path.join(root,'dist/index.html'),'utf8');
+const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
+const root=path.resolve(__dirname,'..'),dist=path.join(root,'dist');
+const assets=['index.html','style.css','cash.css','pwa.css','engine.js','coach.js','cash.js','cash-coach.js','cash-ui.js','pwa.js','app.js','manifest.webmanifest','icons/icon.svg','icons/icon-192.png','icons/icon-512.png','icons/maskable-512.png','icons/apple-touch-icon.png'];
+const template=fs.readFileSync(path.join(__dirname,'service-worker.template.js'),'utf8');
+const hash=crypto.createHash('sha256').update(template);for(const name of assets)hash.update(name).update(fs.readFileSync(path.join(dist,name)));
+const version=hash.digest('hex').slice(0,16);
+fs.writeFileSync(path.join(dist,'sw.js'),template.replace('__VERSION__',version).replace('__ASSETS__',JSON.stringify(assets)));
+let html=fs.readFileSync(path.join(dist,'index.html'),'utf8');
 html=html.replace(/  <link rel="stylesheet" href="([^"]+)">/g,(_,name)=>'<style>'+fs.readFileSync(path.join(root,'dist',name),'utf8')+'</style>');
 const scripts=[];html=html.replace(/  <script src="([^"]+)" defer><\/script>/g,(_,name)=>{scripts.push(fs.readFileSync(path.join(root,'dist',name),'utf8'));return '';});
-html=html.replace('</body>',()=>'<script>'+scripts.join('\n')+'</script></body>');fs.writeFileSync(path.join(root,'mesa-10.html'),html);fs.writeFileSync(path.join(root,'dist/mesa-10.html'),html);console.log('HTML autônomo atualizado.');
+html=html.replace('</body>',()=>'<script>'+scripts.join('\n')+'</script></body>');
+html=html.replace('  <link rel="manifest" href="manifest.webmanifest">','').replaceAll('icons/icon.svg','data:image/svg+xml;base64,'+fs.readFileSync(path.join(dist,'icons/icon.svg')).toString('base64')).replace('icons/apple-touch-icon.png','data:image/png;base64,'+fs.readFileSync(path.join(dist,'icons/apple-touch-icon.png')).toString('base64'));
+fs.writeFileSync(path.join(root,'mesa-10.html'),html);fs.writeFileSync(path.join(dist,'mesa-10.html'),html);console.log('PWA '+version+' e HTML autônomo atualizados.');
