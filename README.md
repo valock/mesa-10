@@ -1,4 +1,4 @@
-# ♠ Mesa 10
+# ♠ Mesa 10 · v2.3.0
 
 **Jogue. Reveja. Evolua.** · Treino de poker em português · PWA para iPhone e Android
 
@@ -6,17 +6,19 @@
 
 ![Mesa 10: treino com cartas reveladas](docs/mesa-10-pwa.jpg)
 
-Treinador de cash game em português, com fichas fictícias. Mesa contínua de seis jogadores, calibração inicial de dez mãos e revisão baseada nas decisões registradas. Projeto estático, sem dependências de execução no navegador, preparado para GitHub e Netlify Functions.
+Treinador de cash game em português, com fichas fictícias. Mesa contínua de nove jogadores, calibração inicial de dez mãos e revisão baseada nas decisões registradas. Projeto estático, sem dependências de execução no navegador, preparado para GitHub e Netlify Functions.
 
 ## O que está implementado
 
-- **Mesa contínua:** 100 fichas iniciais na mesa, 900 fichas de reserva, stacks mantidos entre mãos, reentrada pela reserva e histórico de resultados. Apostas, all-ins, potes laterais, empates e devoluções de apostas não pagas são contabilizados em centésimos de fichas.
-- **Entrada do dealer:** o botão coloca 1 ficha como aposta inicial. Os demais precisam pagar, aumentar ou desistir; não há check gratuito para entrar no flop. O dealer já tem sua entrada paga e só completa a diferença se houver aumento. Não há small blind ou big blind nesta mesa. O botão gira a cada mão e a ação começa à sua esquerda: UTG, UTG+1, MP, HJ, CO e BTN.
-- **Cartas e adversários:** baralho aleatório completo, sem favorecimento do herói; cinco bots com identidades e tendências persistentes, usando suas próprias cartas e a mesa revelada. Três ritmos: Mesa mista, Pressão alta e Imprevisível.
+- **Mesa em reais simulados:** cada entrada custa R$ 22,00: R$ 20,00 em fichas e R$ 2,00 de taxa inicial da casa. O resultado começa em −R$ 2,00. Reentradas adicionam R$ 20,00 às fichas e R$ 22,00 ao custo acumulado, sem apagar perdas.
+- **Blind exclusivo do dealer:** R$ 0,25 no Hold’em e R$ 1,00 no Omaha. O botão gira entre nove assentos; os demais pagam, aumentam ou desistem. O dealer só completa a diferença diante de um aumento. Não existem SB/BB adicionais nesta regra própria.
+- **Rake:** 5% sobre o pote disputado total da mão quando for estritamente maior que R$ 10,00; arredondamento ao centavo mais próximo, sem teto, inclusive em mãos encerradas por desistência. Devoluções de apostas não pagas não entram na base. A taxa é repartida proporcionalmente entre potes principal/laterais antes do pagamento; o último recebe o ajuste de centavos. R$ 10,00 exatos são isentos. Essa estrutura é a regra solicitada para o simulador, não uma regra universal de cash.
+- **Gráfico de lucro/prejuízo:** saldo líquido menos todas as entradas, com linha zero, taxas já descontadas, reentradas e tabela acessível por movimento. O histórico antigo permanece arquivado em fichas e não é convertido para reais.
+- **Cartas e adversários:** baralho aleatório completo, sem favorecimento do herói; oito bots com identidades e tendências persistentes, usando suas próprias cartas e a mesa revelada. Três ritmos: Mesa mista, Pressão alta e Imprevisível.
 - **Todas as rodadas:** pré-flop, flop, turn e river, com apostas, aumentos e reaumentos legais. A mão pode terminar por desistência.
-- **Cartas sempre abertas ao final:** os seis jogadores revelam suas cartas com animação, inclusive os que desistiram. No showdown, veja a melhor combinação de cinco cartas. Se a mão terminar antes, as rodadas não jogadas permanecem fechadas e o vencedor não muda. A revisão fica no histórico das novas mãos.
+- **Cartas sempre abertas ao final:** os nove jogadores revelam suas cartas com animação, inclusive os que desistiram. No showdown, veja a melhor combinação de cinco cartas. Se a mão terminar antes, as rodadas não jogadas permanecem fechadas e o vencedor não muda. A revisão fica no histórico das novas mãos.
 - **PWA:** ícones próprios, instalação na tela inicial, áreas seguras para notch e gestos, treino offline após o primeiro carregamento e atualização mediante clique, salvando a mão primeiro.
-- **Omaha jogável:** a cada dez mãos, a décima é Omaha de quatro cartas, com limite de aumento pelo pote. Usa exatamente duas cartas próprias e três comunitárias. A análise de Omaha fica separada da de Hold’em.
+- **Omaha jogável:** a cada ciclo de nove mãos, a nona é Omaha (oito Hold’em + uma Omaha) de quatro cartas, com limite de aumento pelo pote. Usa exatamente duas cartas próprias e três comunitárias. A análise de Omaha fica separada da de Hold’em.
 - **Calibração inicial:** dez mãos geram uma primeira leitura. O painel Meu jogo apresenta frequências, oportunidades observadas, prioridades, evidências por mão e metas de estudo. Não significa treinar um modelo de IA nem determinar um estilo estável em dez mãos.
 - **Treino direcionado:** refaça decisões que desviaram da referência, com o contexto disponível naquele momento. Os exercícios não mexem na banca e não contam outra vez para a calibração.
 - **Animações:** cartas distribuídas e reveladas, fichas indo às apostas e ao pote, pagamentos aos vencedores e movimento do botão. Velocidades, pausa, pular até sua vez e respeito a movimento reduzido.
@@ -104,6 +106,14 @@ A chamada real ao Gemini e o deploy na conta Netlify do usuário dependem da cha
 
 ## Histórico e colaboração
 
-As alterações estão em [CHANGELOG.md](CHANGELOG.md), incluindo a migração da entrada do dealer na versão 2.1 e o PWA na versão 2.2. Para colaborar, veja [CONTRIBUTING.md](CONTRIBUTING.md). Para comunicar vulnerabilidades e entender o tratamento das chaves, veja [SECURITY.md](SECURITY.md).
+As alterações estão em [CHANGELOG.md](CHANGELOG.md), incluindo reais, rake e mesa de nove jogadores na versão 2.3.0. Para colaborar, veja [CONTRIBUTING.md](CONTRIBUTING.md). Para comunicar vulnerabilidades e entender o tratamento das chaves, veja [SECURITY.md](SECURITY.md).
 
 O histórico anterior é preservado. Mãos antigas que não registravam cartas dos adversários continuam disponíveis, mas não recebem cartas inventadas retroativamente.
+
+## Versões e próximos passos
+
+Versão atual: **2.3.0**. Toda publicação deve atualizar `package.json`, este README e `CHANGELOG.md` juntos. O plano futuro está em [roadmap.md](roadmap.md): login, sincronização e ranking ainda não foram implementados.
+
+As dicas usam fundamentos de GTO (preço líquido para pagar, faixas, posição e valor/blefe). As tabelas são aproximações didáticas herdadas de 6-max; não são soluções de solver para nove jogadores, blind no botão ou esta taxa. A calibração inicial continua em dez mãos (9 Hold’em e 1 Omaha nesse primeiro recorte), independentemente do ciclo de nove. A interface dos exercícios legados mantém as unidades e regras antigas, explicitamente identificadas no Guia.
+
+Validação v2.3.0: testes de nove lugares, ciclo, apostas obrigatórias, rake/limiar, empates, potes laterais, all-ins, reentrada, recarga e API.

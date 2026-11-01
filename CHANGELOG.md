@@ -1,3 +1,13 @@
+# Changelog
+
+## 2.3.0 — 2026-11-01
+- Nove jogadores e ciclo de oito Hold’em + um Omaha.
+- Blind do dealer: R$ 0,25 / R$ 1,00; entrada R$ 22 (20 em fichas + 2 de taxa).
+- Rake de 5% em potes disputados acima de R$ 10, com centavos e potes laterais.
+- Resultado líquido, reentradas e gráfico; sessões antigas arquivadas sem conversão.
+- Vocabulário brasileiro, dicas GTO com fontes e limites; API atualizada para oito adversários.
+- Roadmap de login/ranking; versionamento sincronizado.
+
 # Alterações
 
 ## 2.2.0 · 2026-11-01

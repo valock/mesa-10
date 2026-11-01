@@ -1,3 +1,14 @@
+# Referências da versão 2.3.0
+
+Consulta: 01/11/2026.
+- PokerStars, glossário: https://www.pokerstars.com/pt-BR/poker/terms/ — pagar, desistir, aumentar, botão e blefe. Interface usa também “mesa (check)” e “tudo (all-in)”.
+- PokerStars, rake: https://www.pokerstars.com/pt-BR/poker/room/rake/ — definição da taxa; a estrutura de cobrança deste app é própria.
+- GTO Wizard, preço para pagar: https://blog.gtowizard.com/what-are-pot-odds-in-poker/ — custo versus pote final, efeito do rake e limites de realização de equidade.
+
+Dicas originais, sem copiar tabelas de solver. O cálculo didático usa o pote total estimado, não o pote elegível individual em all-ins com potes laterais. O motor de pagamentos, por sua vez, respeita a elegibilidade. A estimativa de equidade usa mãos aleatórias e não resolve GTO.
+
+## Documentação anterior (exercícios legados)
+
 # Mesa 10: fontes, regras e premissas
 
 Versão 2.1, revisada em 01/11/2026. O aplicativo é independente e usa tabelas e heurísticas próprias. As referências orientam os fundamentos; não constituem endosso ou certificação GTO.

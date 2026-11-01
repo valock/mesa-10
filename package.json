@@ -1,6 +1,6 @@
 {
   "name": "mesa-10",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "private": true,
   "description": "Cash game contínuo com calibração, bankroll simulado e Coach Gemini opcional.",
   "scripts": {
