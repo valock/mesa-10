@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.3.1 — 2026-11-01
+- Reentrada de R$ 20,00 sem repetir a taxa inicial de R$ 2,00.
+- Investimento acumulado cresce junto com as fichas; reentrada não altera lucro/prejuízo.
+- Reentrada opcional entre mãos na aba Progresso.
+
 ## 2.3.0 — 2026-11-01
 - Nove jogadores e ciclo de oito Hold’em + um Omaha.
 - Blind do dealer: R$ 0,25 / R$ 1,00; entrada R$ 22 (20 em fichas + 2 de taxa).

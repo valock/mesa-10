@@ -1,4 +1,4 @@
-# ♠ Mesa 10 · v2.3.0
+# ♠ Mesa 10 · v2.3.1
 
 **Jogue. Reveja. Evolua.** · Treino de poker em português · PWA para iPhone e Android
 
@@ -10,7 +10,7 @@ Treinador de cash game em português, com fichas fictícias. Mesa contínua de n
 
 ## O que está implementado
 
-- **Mesa em reais simulados:** cada entrada custa R$ 22,00: R$ 20,00 em fichas e R$ 2,00 de taxa inicial da casa. O resultado começa em −R$ 2,00. Reentradas adicionam R$ 20,00 às fichas e R$ 22,00 ao custo acumulado, sem apagar perdas.
+- **Mesa em reais simulados:** cada entrada custa R$ 22,00: R$ 20,00 em fichas e R$ 2,00 de taxa inicial da casa. O resultado começa em −R$ 2,00. Reentradas adicionam R$ 20,00 às fichas e R$ 20,00 ao custo acumulado, sem repetir a taxa inicial, sem apagar perdas.
 - **Blind exclusivo do dealer:** R$ 0,25 no Hold’em e R$ 1,00 no Omaha. O botão gira entre nove assentos; os demais pagam, aumentam ou desistem. O dealer só completa a diferença diante de um aumento. Não existem SB/BB adicionais nesta regra própria.
 - **Rake:** 5% sobre o pote disputado total da mão quando for estritamente maior que R$ 10,00; arredondamento ao centavo mais próximo, sem teto, inclusive em mãos encerradas por desistência. Devoluções de apostas não pagas não entram na base. A taxa é repartida proporcionalmente entre potes principal/laterais antes do pagamento; o último recebe o ajuste de centavos. R$ 10,00 exatos são isentos. Essa estrutura é a regra solicitada para o simulador, não uma regra universal de cash.
 - **Gráfico de lucro/prejuízo:** saldo líquido menos todas as entradas, com linha zero, taxas já descontadas, reentradas e tabela acessível por movimento. O histórico antigo permanece arquivado em fichas e não é convertido para reais.
@@ -106,14 +106,16 @@ A chamada real ao Gemini e o deploy na conta Netlify do usuário dependem da cha
 
 ## Histórico e colaboração
 
-As alterações estão em [CHANGELOG.md](CHANGELOG.md), incluindo reais, rake e mesa de nove jogadores na versão 2.3.0. Para colaborar, veja [CONTRIBUTING.md](CONTRIBUTING.md). Para comunicar vulnerabilidades e entender o tratamento das chaves, veja [SECURITY.md](SECURITY.md).
+As alterações estão em [CHANGELOG.md](CHANGELOG.md), incluindo reais, rake e mesa de nove jogadores na versão 2.3.1. Para colaborar, veja [CONTRIBUTING.md](CONTRIBUTING.md). Para comunicar vulnerabilidades e entender o tratamento das chaves, veja [SECURITY.md](SECURITY.md).
 
 O histórico anterior é preservado. Mãos antigas que não registravam cartas dos adversários continuam disponíveis, mas não recebem cartas inventadas retroativamente.
 
 ## Versões e próximos passos
 
-Versão atual: **2.3.0**. Toda publicação deve atualizar `package.json`, este README e `CHANGELOG.md` juntos. O plano futuro está em [roadmap.md](roadmap.md): login, sincronização e ranking ainda não foram implementados.
+Versão atual: **2.3.1**. Toda publicação deve atualizar `package.json`, este README e `CHANGELOG.md` juntos. O plano futuro está em [roadmap.md](roadmap.md): login, sincronização e ranking ainda não foram implementados.
 
 As dicas usam fundamentos de GTO (preço líquido para pagar, faixas, posição e valor/blefe). As tabelas são aproximações didáticas herdadas de 6-max; não são soluções de solver para nove jogadores, blind no botão ou esta taxa. A calibração inicial continua em dez mãos (9 Hold’em e 1 Omaha nesse primeiro recorte), independentemente do ciclo de nove. A interface dos exercícios legados mantém as unidades e regras antigas, explicitamente identificadas no Guia.
 
-Validação v2.3.0: testes de nove lugares, ciclo, apostas obrigatórias, rake/limiar, empates, potes laterais, all-ins, reentrada, recarga e API.
+Validação v2.3.1: testes de nove lugares, ciclo, apostas obrigatórias, rake/limiar, empates, potes laterais, all-ins, reentrada, recarga e API.
+
+Reentradas de R$ 20,00 estão disponíveis entre mãos na aba Progresso, além da oferta automática quando o saldo é insuficiente. Os R$ 2,00 são cobrados somente ao iniciar uma nova mesa.

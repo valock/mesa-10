@@ -120,7 +120,7 @@ function step(t){const h=t.hand;if(!h||h.phase==='finished')return false;
  return false;
 }
 function runToHero(t,max=500){let steps=0;while(steps++<max&&step(t)){}if(steps>=max)throw new Error('Limite de ações excedido.');return t.hand;}
-function rebuy(t){if(t.hand&&t.hand.phase!=='finished')return false;t.players[0].stack+=2000;t.contributions=(t.contributions??t.initialBankroll)+2200;t.entryFees=(t.entryFees||0)+200;t.rebuyCount++;t.ledger||=[];t.ledger.push({type:'rebuy',net:t.reserve+t.players[0].stack-t.contributions});return true;}
+function rebuy(t){if(t.hand&&t.hand.phase!=='finished')return false;t.players[0].stack+=2000;t.contributions=(t.contributions??t.initialBankroll)+2000;t.rebuyCount++;t.ledger||=[];t.ledger.push({type:'rebuy',net:t.reserve+t.players[0].stack-t.contributions});return true;}
 function visible(t){const h=t.hand;if(!h)return null;return {number:h.number,kind:h.kind,phase:h.phase,street:h.street,dealer:t.dealer,actor:h.actor,pot:bb(pot(t)),centerPot:bb(Math.max(0,pot(t)-h.wagers.reduce((a,b)=>a+b,0))),board:h.board.slice(0,h.visible),event:h.event,players:t.players.map((p,i)=>({seat:i,name:p.name,stack:bb(p.stack),position:position(t,i),folded:h.folded[i],wager:bb(h.wagers[i]),dealt:h.dealt[i],cards:i===0?h.holes[i].slice(0,h.dealt[i]):h.phase==='finished'||(h.phase==='settle'&&h.revealedSeats?.includes(i))?h.holes[i]:null,allIn:p.stack===0})),legal:h.actor===0?legal(t,0):null};}
 return {minimum,rake,make,upgrade,start,step,act,legal,position,pot,visible,runToHero,rebuy,publicSpot,reference,equity,holePower,payoutPlan,revealedHands,bb,money,STREETS};
 });
