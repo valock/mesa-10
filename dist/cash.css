@@ -53,3 +53,10 @@ body .main{padding-bottom:calc(90px + env(safe-area-inset-bottom))}
 body .pwa-notice{bottom:calc(58px + env(safe-area-inset-bottom))}
 body .toast{bottom:calc(78px + env(safe-area-inset-bottom))}
 }
+/* v2.3.5 · Decisão compacta no celular: ações aparecem junto da mesa */
+@media(max-width:850px){
+.cash-decision>h2{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.cash-decision .decision-top{margin-bottom:8px}
+.cash-result .hand-net+.next-button,.cash-result .hand-net+.method-note{margin-top:14px}
+.cash-result .next-button{width:100%}
+}

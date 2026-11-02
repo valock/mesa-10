@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.3.5 — 2026-11-02
+- Celular/PWA: a tela rola sozinha até as ações quando chega sua vez e até “Próxima mão” quando a mão termina; depois volta para a mesa.
+- “Próxima mão” logo abaixo do resultado; showdown e revisão ficam depois do botão.
+- Painel de decisão mais compacto no celular (título redundante oculto visualmente, mantido para leitores de tela).
+
 ## 2.3.4 — 2026-11-02
 - Layout “jogo primeiro”: mesa e painel de decisão no topo; banca, calibração, rastro da mão e avisos abaixo.
 - No celular, a navegação vira barra inferior fixa, liberando o topo para a mesa.
