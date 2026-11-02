@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.3.6 — 2026-11-02
+- “Pular até minha vez” e “Próxima mão” aparecem no centro do feltro, logo abaixo das cartas comunitárias.
+- No celular, os botões duplicados nos cards foram ocultados; ao fim da mão a tela mostra a mesa com o botão central.
+
 ## 2.3.5 — 2026-11-02
 - Celular/PWA: a tela rola sozinha até as ações quando chega sua vez e até “Próxima mão” quando a mão termina; depois volta para a mesa.
 - “Próxima mão” logo abaixo do resultado; showdown e revisão ficam depois do botão.
