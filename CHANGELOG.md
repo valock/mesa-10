@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.3.4 — 2026-11-02
+- Layout “jogo primeiro”: mesa e painel de decisão no topo; banca, calibração, rastro da mão e avisos abaixo.
+- No celular, a navegação vira barra inferior fixa, liberando o topo para a mesa.
+- Apenas reposicionamento: nenhum conteúdo, regra ou cálculo foi alterado.
+
 ## 2.3.3 — 2026-11-01
 - Omaha a cada dez mãos (9 Hold’em + 1 Omaha), independente do giro dos nove assentos.
 - Preserva integralmente mão aberta, saldo, histórico e estado salvo; só novas mãos usam a nova frequência.

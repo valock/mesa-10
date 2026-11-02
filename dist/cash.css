@@ -29,3 +29,27 @@
 /* Nine-handed table: reserve room for eight opponents and the hero. */
 .cash-stage{height:650px}.cash-stage .hero{top:88%}.cash-stage .seat{width:110px;transform:translate(-50%,-50%)}.cash-stage .board-area{top:43%;max-width:58%}.cash-stage .seat-label{display:flex;flex-direction:column;align-items:center}.cash-stage .seat-label small{white-space:nowrap}.cash-stage .felt{bottom:42px}.position-tabs{flex-wrap:wrap}.bank-graph details{margin-top:12px}.bank-graph ol{max-height:220px;overflow:auto}.cash-bank strong{font-size:clamp(15px,3vw,24px)}
 @media(max-width:600px){.cash-stage{height:620px}.cash-stage .seat{width:78px}.cash-stage .seat .card.small{width:16px;height:26px}.cash-stage .seat .card.small .rank{font-size:9px}.cash-stage .seat .card.small .suit{font-size:11px}.cash-stage .seat .cards{gap:1px}.cash-stage .seat-label{font-size:9px}.cash-stage .seat-label small{font-size:10px}.cash-stage .board-area{max-width:58%}.cash-board{gap:2px}.cash-board .card,.cash-board .ghost-card{width:27px;height:40px}.cash-stage .hero{top:88%}.cash-wager{font-size:8px;padding:2px 4px;gap:2px}.cash-wager .chip{display:none}.cash-stage .fold-text{font-size:9px}}
+
+/* v2.3.4 · Jogo primeiro: mesa e ações no topo, informações abaixo */
+.cash-grid.cash-play-grid>.cash-table{grid-column:1;grid-row:1}
+.cash-grid.cash-play-grid>.side-stack{grid-column:2;grid-row:1/span 2}
+.cash-grid.cash-play-grid>.cash-hand-log{grid-column:1;grid-row:2;position:relative;top:0;overflow:hidden}
+.cash-hand-log .atmosphere-strip{margin:0;padding:12px 23px;border-top:0}
+.cash-hand-log .table-bottom{padding-top:10px;padding-bottom:10px;flex-wrap:wrap}
+.cash-below{margin-top:28px}
+@media(max-width:850px){
+.cash-grid.cash-play-grid>.cash-table,.cash-grid.cash-play-grid>.cash-hand-log,.cash-grid.cash-play-grid .side-stack>*{grid-column:1;grid-row:auto}
+.cash-grid.cash-play-grid>.cash-table{order:1}
+.cash-grid.cash-play-grid .decision-card{order:2}
+.cash-grid.cash-play-grid>.cash-hand-log{order:3}
+.cash-grid.cash-play-grid .calibration-card{order:4}
+.cash-grid.cash-play-grid .opponent-hud{order:5}
+.cash-grid.cash-play-grid .note-card{order:6}
+.cash-hand-log .atmosphere-strip{padding:11px 16px}
+.cash-below{margin-top:20px}
+.site-header .nav{position:fixed;left:0;right:0;bottom:0;z-index:50;margin:0;padding:7px 10px calc(7px + env(safe-area-inset-bottom));background:#0e1917f7;border-top:1px solid var(--line);box-shadow:0 -8px 24px #0005;justify-content:space-around}
+.site-header .nav button{flex:1;min-height:42px}
+body .main{padding-bottom:calc(90px + env(safe-area-inset-bottom))}
+body .pwa-notice{bottom:calc(58px + env(safe-area-inset-bottom))}
+body .toast{bottom:calc(78px + env(safe-area-inset-bottom))}
+}
