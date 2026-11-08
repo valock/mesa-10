@@ -1,6 +1,6 @@
 # Roadmap · Mesa 10
 
-Atualizado para v2.5.0. Itens futuros; sem prazo prometido.
+Atualizado para v2.5.1. Itens futuros; sem prazo prometido.
 
 ## Entregue
 - [x] Nove jogadores; ciclos de nove Hold’em e um Omaha.
@@ -42,3 +42,5 @@ A cada entrega, atualizar README, package.json e CHANGELOG com a mesma versão e
 - [x] Identidade preservada nas trocas; rebuys e perdas acumuladas por participante.
 - [ ] Ranking compartilhado persistido e validado pelo servidor; separar simulações locais de partidas elegíveis.
 - [ ] Comparar XP de lucro por estruturas equivalentes e amostras mínimas, sem tratar sorte de uma sessão como habilidade.
+
+- [x] Mesa horizontal responsiva no celular e layout lado a lado em paisagem; preservar progresso ao girar.

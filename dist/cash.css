@@ -79,3 +79,90 @@ body .toast{bottom:calc(78px + env(safe-area-inset-bottom))}
 
 /* Sessão de cash e fechamento */
 .session-clock{margin-bottom:18px;padding:18px 22px;background:#15231f;border:1px solid #425046;border-radius:18px}.session-clock>div{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}.session-clock span,.session-clock small{color:#b9c6bd}.session-clock progress{display:block;width:100%;height:6px;margin:12px 0;accent-color:#d7bd83}.session-clock p{margin:10px 0 0;color:#d7bd83}.session-settlement{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:22px 0}.session-settlement small,.session-settlement strong{display:block}.session-settlement strong{font-size:20px;margin-top:6px}.session-settlement small{color:#b9c6bd}.cash-ranking{width:100%;border-collapse:collapse;text-align:left;min-width:500px}.cash-ranking td,.cash-ranking th{padding:12px;border-bottom:1px solid #35483d}.ranking-scroll{overflow:auto}.sponsor-note{font-size:11px;color:#aeb9b0;text-align:center;padding:15px}.cash-stage .felt{border-width:5px}.cash-stage .pot{background:#0b1716ed}.cash-board{padding:8px;background:#0a151460;border-radius:12px}@media(max-width:600px){.session-clock{padding:14px}.session-clock span{font-size:12px}.session-settlement{gap:12px}.session-settlement strong{font-size:17px}}
+
+/* v2.5.1 · Responsive coordinates also drive chip flights. */
+.cash-stage{--seat-x0:50%;--seat-y0:88%;--seat-x1:17%;--seat-y1:78%;--seat-x2:13%;--seat-y2:56%;--seat-x3:13%;--seat-y3:30%;--seat-x4:34%;--seat-y4:10%;--seat-x5:66%;--seat-y5:10%;--seat-x6:87%;--seat-y6:30%;--seat-x7:87%;--seat-y7:56%;--seat-x8:83%;--seat-y8:78%}
+@media(max-width:850px), (orientation:landscape) and (max-height:600px) and (max-width:1000px){
+ .cash-grid.cash-play-grid{gap:12px}
+ .cash-grid.cash-play-grid>.cash-table{position:relative;top:auto}
+ .cash-stage{height:clamp(340px,calc(60vw + 120px),470px);margin:0 6px;--seat-x0:50%;--seat-y0:76%;--seat-x1:15%;--seat-y1:80%;--seat-x2:9%;--seat-y2:46%;--seat-x3:13%;--seat-y3:14%;--seat-x4:37%;--seat-y4:14%;--seat-x5:63%;--seat-y5:14%;--seat-x6:87%;--seat-y6:14%;--seat-x7:91%;--seat-y7:46%;--seat-x8:85%;--seat-y8:80%}
+ .cash-stage .felt{top:65px;bottom:auto;left:12px;right:12px;width:calc(100% - 24px);height:auto;aspect-ratio:1672/941;border:0;border-radius:28%;background-size:100% 100%;box-shadow:0 8px 16px #0005}
+ .cash-stage .felt:after{display:none}
+ .cash-stage .seat{width:64px}
+ .cash-stage .seat-avatar{display:none}
+ .cash-stage .seat-label{min-width:0;width:100%;padding:3px 4px;gap:1px;border-radius:7px}
+ .cash-stage .seat-label b{font-size:9px;line-height:12px}
+ .cash-stage .seat-label small{font-size:10px;line-height:12px}
+ .cash-stage .fold-text{font-size:9px;line-height:13px;letter-spacing:0;margin-top:3px;min-height:13px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+ .cash-stage .seat-cards{min-height:20px;height:20px}
+ .cash-stage .seat-cards .card-back{width:14px;height:19px;border-radius:3px}
+ .cash-stage .seat .cards{gap:1px}
+ .cash-stage .seat .card.small{width:15px;height:23px;border-radius:3px}
+ .cash-stage .seat .card.small .rank{font-size:8px;left:2px;top:2px}
+ .cash-stage .seat .card.small .suit{font-size:10px}
+ .cash-stage .seat .card-corner{display:none}
+ .cash-stage .board-area{top:46%;max-width:60%}
+ .cash-stage .pot{padding:3px 9px;margin-bottom:5px}
+ .cash-stage .pot-value{font-size:20px}
+ .cash-stage .pot small{font-size:7px}
+ .cash-board{padding:4px;gap:3px;min-height:42px}
+ .cash-board .card.mini,.cash-board .ghost-card{width:27px;height:39px}
+ .cash-board .card.mini .rank{font-size:13px}
+ .cash-board .card.mini .suit{font-size:17px}
+ .cash-stage .board-caption{padding:3px 5px;margin-top:5px;font-size:7px;letter-spacing:.3px}
+ .cash-stage .hero{top:76%}
+ .cash-stage .hero .card{width:38px;height:53px}
+ .cash-stage .hero .cards{gap:4px}
+ .cash-stage .hero .card .rank{font-size:17px}
+ .cash-stage .hero .card .suit{font-size:22px}
+ .cash-stage .hero .card-corner{font-size:9px}
+ .cash-omaha .hero .card{width:30px;height:45px}
+ .cash-omaha .hero .card .rank{font-size:14px}
+ .cash-omaha .hero .card .suit{font-size:18px}
+ .cash-stage .hero-topline{font-size:8px;margin-bottom:5px}
+ .cash-stage .hero .hero-label{margin-top:6px;padding:5px 7px;gap:5px}
+ .cash-stage .hero-label b,.cash-stage .hero-label span{font-size:9px}
+ .cash-stage .stage-cta{display:none}
+ .waiting-card [data-do="cash-skip"],.cash-result [data-do="cash-next"]{display:flex;min-height:44px}
+ .cash-stage:has(.stage-cta) .wager-0{left:50%}
+ .cash-wager{font-size:8px;gap:2px;padding:2px 4px}
+ .cash-wager .chip{display:none}
+ .cash-table .table-top{padding:12px 12px 0}
+ .cash-table .table-caption{flex-wrap:wrap;gap:5px}
+ .cash-table .table-caption strong{font-size:11px}
+ .cash-table .street-badge{font-size:9px;padding:6px 8px}
+ .cash-table-status{padding:7px 12px;min-height:28px;font-size:10px}
+ .session-clock{padding:10px 14px;margin-bottom:10px}
+ .session-clock>div{gap:4px}
+ .session-clock strong{font-size:12px}
+ .session-clock span{font-size:10px}
+ .session-clock progress{margin:7px 0;height:4px}
+ .session-clock small{font-size:9px}
+ .session-clock p{font-size:10px;margin-top:6px}
+ .cash-grid .decision-card{padding:14px}
+ .cash-decision>p,.cash-context{font-size:11px}
+ .cash-basic .action{min-height:64px}
+ .cash-decision .actions{margin-top:10px}
+ .raise-control{margin-top:10px;padding:10px}
+ .raise-entry input{font-size:16px;min-height:44px}
+}
+/* Phones in landscape: table and decisions beside each other, notch-safe. */
+@media(orientation:landscape) and (max-height:600px) and (max-width:1000px){
+ .header-inner{padding:8px 16px;flex-wrap:nowrap;gap:12px}
+ .brand-word{font-size:21px}.brand small{display:none}
+ .site-header .nav{position:static;box-shadow:none;border:0;background:none;padding:0;gap:1px;flex:1}
+ .site-header .nav button{padding:7px 5px;font-size:10px;min-height:44px;flex:1}
+ body .main{padding:10px 12px calc(16px + env(safe-area-inset-bottom))}
+ .cash-grid.cash-play-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(250px,1fr);gap:12px;align-items:start}
+ .cash-grid.cash-play-grid>.cash-table{grid-column:1;grid-row:1;order:0;position:relative;top:auto}
+ .cash-grid.cash-play-grid>.side-stack{display:flex;grid-column:2;grid-row:1/span 2;min-width:0}
+ .cash-grid.cash-play-grid .side-stack>*{order:initial}
+ .cash-grid.cash-play-grid>.cash-hand-log{grid-column:1;grid-row:2;order:0}
+ .cash-stage{height:340px}
+ .cash-stage .felt{top:65px;bottom:auto;left:12px;right:12px;width:calc(100% - 24px);height:auto;aspect-ratio:1672/941;border:0;border-radius:28%}
+ .cash-stage .hero{top:76%}
+ .session-clock small{display:none}
+ .session-clock{padding:8px 12px}
+ .session-clock progress{margin-bottom:0}
+ body .pwa-notice{bottom:env(safe-area-inset-bottom)}
+}

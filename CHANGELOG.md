@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.5.1 · 2026-11-08
+- Corrige feltro excessivamente vertical no iPhone/PWA; preserva proporção da arte e patrocinadores.
+- Redistribui nove jogadores, cartas, apostas e animações no celular.
+- Ações abaixo da mesa em retrato e ao lado em paisagem; foco após rotação, sem resetar a mão.
+
 ## 2.5.0 · 2026-11-07
 - Fundo discreto com quatro patrocinadores; marcotulio.pro corrigido para corretor de imóveis.
 - Elenco com 20 participantes contando o usuário, fila de substituição de bots zerados e identidade nas estatísticas.

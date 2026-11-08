@@ -1,4 +1,4 @@
-# ♠ Mesa 10 · v2.5.0
+# ♠ Mesa 10 · v2.5.1
 
 **Jogue. Reveja. Evolua.** · Treino de poker em português · PWA para iPhone e Android
 
@@ -145,3 +145,12 @@ Na v2.4.0, Omaha ocorre nas mãos 10, 20, 30… A atualização mantém a modali
 - Quando seu saldo for insuficiente, escolha rebuy de R$ 20 ou sair e acompanhar com outro personagem no assento. Seu resultado congela na saída; as mãos seguintes não somam participação nem decisões suas.
 - Compatibilidade: cartas, saldo, investimentos e histórico do jogo aberto permanecem. Mesas antigas acima de 120 mãos concluem a mão aberta (ou uma próxima se já estavam entre mãos). Para bots de mesas antigas, o saldo no início da mão corrente vira a base de fichas da nova contabilidade, somada a R$ 2 de entrada; não se inventam rebuys históricos. Participação anterior dos bots não gera XP retroativo.
 - Verificações cobrem fechamento, bloqueio após limite, recarga idempotente, substituições, centavos restantes, estatísticas por identidade, rebuy, espectador e migração.
+
+
+## v2.5.1 · Mesa no iPhone/PWA
+
+- Feltro horizontal com a proporção original da arte (1672:941), sem esticar patrocinadores.
+- Mesa compacta no celular, oito adversários ao redor e cartas do usuário dentro do painel; ações abaixo da mesa, com alvos de toque de pelo menos 44 px nos comandos principais.
+- Com o celular deitado, mesa e ações lado a lado; o foco acompanha a rotação sem forçar orientação ou reiniciar a mão.
+- Posições de apostas e animações usam as mesmas coordenadas responsivas dos jogadores. Preservadas áreas seguras do PWA e navegação inferior em retrato.
+- Verificação de layout em viewports 375×667, 390×844, 844×390 e 932×430 no navegador de QA; validação em dispositivo iOS físico não realizada. Estado salvo, regras e pontuação não foram alterados.
