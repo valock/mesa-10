@@ -1,4 +1,4 @@
-# ♠ Mesa 10 · v2.4.0
+# ♠ Mesa 10 · v2.5.0
 
 **Jogue. Reveja. Evolua.** · Treino de poker em português · PWA para iPhone e Android
 
@@ -14,7 +14,7 @@ Treinador de cash game em português, com fichas fictícias. Mesa contínua de n
 - **Blind exclusivo do dealer:** R$ 0,25 no Hold’em e R$ 0,50 no Omaha. O botão gira entre nove assentos; os demais pagam, aumentam ou desistem. O dealer só completa a diferença diante de um aumento. Não existem SB/BB adicionais nesta regra própria.
 - **Rake:** 5% sobre o pote disputado total da mão quando for estritamente maior que R$ 10,00; arredondamento ao centavo mais próximo, sem teto, inclusive em mãos encerradas por desistência. Devoluções de apostas não pagas não entram na base. A taxa é repartida proporcionalmente entre potes principal/laterais antes do pagamento; o último recebe o ajuste de centavos. R$ 10,00 exatos são isentos. Essa estrutura é a regra solicitada para o simulador, não uma regra universal de cash.
 - **Gráfico de lucro/prejuízo:** saldo líquido menos todas as entradas, com linha zero, taxas já descontadas, reentradas e tabela acessível por movimento. O histórico antigo permanece arquivado em fichas e não é convertido para reais.
-- **Cartas e adversários:** baralho aleatório completo, sem favorecimento do herói; oito bots com identidades e tendências persistentes, usando suas próprias cartas e a mesa revelada. Três ritmos: Mesa mista, Pressão alta e Imprevisível.
+- **Cartas e adversários:** baralho aleatório completo, sem favorecimento do herói; oito bots sentados, selecionados de 19 personagens com identidades e tendências persistentes, usando suas próprias cartas e a mesa revelada. Três ritmos: Mesa mista, Pressão alta e Imprevisível.
 - **Todas as rodadas:** pré-flop, flop, turn e river, com apostas, aumentos e reaumentos legais. A mão pode terminar por desistência.
 - **Cartas sempre abertas ao final:** os nove jogadores revelam suas cartas com animação, inclusive os que desistiram. No showdown, veja a melhor combinação de cinco cartas. Se a mão terminar antes, as rodadas não jogadas permanecem fechadas e o vencedor não muda. A revisão fica no histórico das novas mãos.
 - **PWA:** ícones próprios, instalação na tela inicial, áreas seguras para notch e gestos, treino offline após o primeiro carregamento e atualização mediante clique, salvando a mão primeiro.
@@ -132,3 +132,16 @@ Na v2.4.0, Omaha ocorre nas mãos 10, 20, 30… A atualização mantém a modali
 - Comentários após a decisão, com linguagem brasileira respeitosa: desistência sem custo para continuar e diferenças amplas no preço/equidade estimada no river. Sem inventar precisão GTO, sem cartas ocultas e sem pontuação extra.
 - Login WhatsApp, aprendizado de perfis humanos e ranking compartilhado são futuros: veja roadmap.md. Nenhum telefone ou modelo pessoal está sendo coletado ou compartilhado nesta versão.
 - 65 testes, incluindo compatibilidade da mão salva, regras Omaha, personagens e comentários.
+
+
+## v2.5.0 · Sessão da Casa do Gui
+
+- Fundo com cores discretas e centro livre para as cartas; preservados marcotulio.pro (corretor de imóveis), iGUi Piscinas, Sankhya e LD Celulose. Arte fornecida pelo usuário e adaptada, sem afirmar patrocínio verificado.
+- Elenco de 20 participantes contando você (19 personagens fictícios), nove assentos. Bot com stack zero é trocado entre mãos pelo próximo da fila; saldo pequeno continua elegível a all-in. A fila pode voltar a personagens já usados, cobrando apenas rebuy de R$ 20 na mesma sessão.
+- Sessão padrão: 120 mãos, equivalentes a cinco horas simuladas a 24 mãos/h. Referência de cash full ring ao vivo: [PokerNews, 25–30 mãos/h](https://www.pokernews.com/strategy/transitioning-from-live-to-online-cash-games-37061.htm). Escolha conservadora do produto para mesa caseira mista; não é cronômetro real nem garantia de velocidade. São 108 Hold’em e 12 Omaha.
+- Ao terminar a última mão e pagar todos os potes, a sessão fecha automaticamente. Mostra saldo devolvido, investimento acumulado, resultado líquido e XP de mesa; bloqueia nova mão e rebuy. O saldo é um registro simulado, sem transação financeira. Recarregar não duplica o fechamento.
+- XP de mesa: 1 por mão disputada + `floor(max(0, lucro líquido em reais))`. Lucro líquido = saldo devolvido − entradas (inclui R$ 2 inicial e rebuys). Não há bônus por prejuízo. Os pontos de estudo (20/5 por resposta) ficam separados do ranking de mesa, mas o cabeçalho mostra o total pessoal.
+- Ranking local acumulado por identidade nas sessões concluídas, inclusive bots. Ordenação: XP, resultado líquido, ID estável. Mesas incompletas não dão bônus de fechamento. WhatsApp, sincronização e ranking público validado continuam futuros.
+- Quando seu saldo for insuficiente, escolha rebuy de R$ 20 ou sair e acompanhar com outro personagem no assento. Seu resultado congela na saída; as mãos seguintes não somam participação nem decisões suas.
+- Compatibilidade: cartas, saldo, investimentos e histórico do jogo aberto permanecem. Mesas antigas acima de 120 mãos concluem a mão aberta (ou uma próxima se já estavam entre mãos). Para bots de mesas antigas, o saldo no início da mão corrente vira a base de fichas da nova contabilidade, somada a R$ 2 de entrada; não se inventam rebuys históricos. Participação anterior dos bots não gera XP retroativo.
+- Verificações cobrem fechamento, bloqueio após limite, recarga idempotente, substituições, centavos restantes, estatísticas por identidade, rebuy, espectador e migração.

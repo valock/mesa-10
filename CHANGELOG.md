@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.5.0 · 2026-11-07
+- Fundo discreto com quatro patrocinadores; marcotulio.pro corrigido para corretor de imóveis.
+- Elenco com 20 participantes contando o usuário, fila de substituição de bots zerados e identidade nas estatísticas.
+- Sessão de 120 mãos (5 horas simuladas), fechamento com saldo devolvido, lucro líquido e XP local sem duplicação.
+- Ranking por sessões concluídas, rebuy contabilizado por participante, opção de sair e assistir e preservação das mesas antigas.
+- Guia atualizado com valores em reais, Omaha pré-flop pot-limit e regras de sessão.
+
 ## 2.4.0 — 2026-11-07
 - Fundo Casa do Gui offline e elenco de 12 perfis fictícios com oito bots por mesa.
 - Omaha R$ 0,50, dealer inicia pré-flop, pot-limit somente pré-flop.

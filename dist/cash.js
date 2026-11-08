@@ -18,9 +18,42 @@ const PROFILES=[
  ['fernando','Fernando','O Observador',.42,.32,'Prefere acompanhar antes de acelerar.'],
  ['maycon','Maycon','O Ousado',.70,.76,'Disputa mais potes e aposta com frequência.'],
  ['lucas-cunhado','Lucas (cunhado do Ernane)','O Equilibrado',.38,.48,'Mistura cautela e iniciativa.'],
- ['negued','Negued','O Criativo',.60,.58,'Explora mais combinações e tamanhos.']
+ ['negued','Negued','O Criativo',.60,.58,'Explora mais combinações e tamanhos.'],
+ ['beto','Beto','O Mineiro',.45,.35,'Prefere potes controlados e observa a mesa.'],
+ ['chico','Chico','O Veterano',.30,.55,'Seleciona entradas e valoriza a posição.'],
+ ['rafa','Rafa','O Veloz',.58,.72,'Disputa a iniciativa com frequência.'],
+ ['bia','Bia','A Analista',.32,.62,'Combina seleção e pressão.'],
+ ['nina','Nina','A Cautelosa',.26,.30,'Evita potes grandes com mãos frágeis.'],
+ ['duda','Duda','A Inquieta',.68,.57,'Explora mais entradas e alterna tamanhos.'],
+ ['caio','Caio','O Tranquilo',.50,.28,'Acompanha mais e aumenta menos.']
 ].map(([id,name,nickname,loose,aggression,description])=>({id,name,nickname,loose,aggression,description,source:'fictional',version:1}));
-function seatProfiles(t){if(t.rosterVersion)return;const roster=E.shuffle(PROFILES,()=>rand(t)).slice(0,8);t.players.slice(1).forEach((p,i)=>{const v=roster[i];p.name=v.name;p.profileId=v.id;p.nickname=v.nickname;p.style={loose:v.loose,aggression:v.aggression};});t.rosterVersion=1;t.rosterStart=t.history.length;}
+function seatProfiles(t){if(t.rosterVersion)return;const roster=E.shuffle(PROFILES,()=>rand(t)).slice(0,8);t.players.slice(1).forEach((p,i)=>{const v=roster[i];if(t.session){const old=t.session.participants[participantId(p)];if(old){delete t.session.participants[old.id];old.id=v.id;old.name=v.name;t.session.participants[v.id]=old;}}p.name=v.name;p.profileId=v.id;p.nickname=v.nickname;p.style={loose:v.loose,aggression:v.aggression};});t.rosterVersion=1;t.rosterStart=t.history.length;if(t.session){const active=new Set(t.players.map(participantId));t.session.queue=PROFILES.filter(p=>!active.has(p.id)).map(p=>p.id);}}
+const SESSION_HANDS=120;
+function participantId(p){return p.profileId||(p.id===0?'hero':'legacy-seat-'+p.id);}
+function ensureSession(t){
+ if(t.session)return t.session;
+ const active=t.hand&&t.hand.phase!=='finished';
+ t.session={version:1,maxHands:Math.max(SESSION_HANDS,t.number+(active?0:1)),hours:5,handsPerHour:24,closed:false,participants:{},queue:[],rotations:[],startedAt:new Date().toISOString()};
+ for(const p of t.players){const id=participantId(p);t.session.participants[id]={id,name:p.name,invested:p.id===0?(t.contributions??2200):t.number>0?(active?t.hand.startStacks[p.id]:p.stack)+200:2200,cashout:0,hands:p.id===0?t.history.length:0};}
+ const seated=new Set(t.players.map(participantId));t.session.queue=E.shuffle(PROFILES.filter(p=>!seated.has(p.id)).map(p=>p.id),()=>rand(t));
+ t.session.legacy=t.number>0;return t.session;
+}
+function joinSeat(t,seat){const ss=ensureSession(t),old=t.players[seat],oldId=participantId(old),out=ss.participants[oldId];
+ if(out)out.cashout+=old.stack;
+ const active=new Set(t.players.filter(p=>p.id!==seat).map(participantId));
+ const index=ss.queue.findIndex(id=>id!==oldId&&!active.has(id));if(index<0)throw new Error('Elenco sem substituto disponível.');
+ const id=ss.queue.splice(index,1)[0],v=PROFILES.find(p=>p.id===id);
+ if(PROFILES.some(p=>p.id===oldId))ss.queue.push(oldId);
+ if(!ss.participants[id])ss.participants[id]={id,name:v.name,invested:2200,cashout:0,hands:0};else ss.participants[id].invested+=2000;
+ t.players[seat]={id:seat,name:v.name,profileId:v.id,nickname:v.nickname,style:{loose:v.loose,aggression:v.aggression},stack:2000,seatedAt:t.number+1};t.botRefills+=2000;
+ ss.rotations.push({afterHand:t.number,seat,out:old.name,in:v.name});
+}
+function watch(t){if(t.session?.closed||!t.hand||t.hand.phase!=='finished'||t.spectating)return false;ensureSession(t);t.spectating=true;joinSeat(t,0);return true;}
+function finishSession(t){const ss=ensureSession(t);if(ss.closed)return ss.result;if(t.number<ss.maxHands||(t.hand&&t.hand.phase!=='finished'))return null;
+ const rows=Object.values(ss.participants).map(p=>{const seated=t.players.find(x=>participantId(x)===p.id),cashout=p.cashout+(seated?seated.stack:0)+(p.id==='hero'?t.reserve:0),net=cashout-p.invested,profitXP=Math.floor(Math.max(0,net)/100);return {...p,cashout,net,profitXP,xp:p.hands+profitXP};});
+ ss.closed=true;ss.closedAt=new Date().toISOString();ss.result={id:t.id,hands:t.history.length,closedAt:ss.closedAt,rows:rows.sort((a,b)=>b.xp-a.xp||b.net-a.net||a.id.localeCompare(b.id))};return ss.result;
+}
+function ranking(tables){const all=new Map(),seen=new Set();for(const t of tables){if(seen.has(t.id)||!t.session?.closed)continue;seen.add(t.id);for(const p of t.session.result.rows){const r=all.get(p.id)||{id:p.id,name:p.name,xp:0,net:0,sessions:0};r.xp+=p.xp;r.net+=p.net;r.sessions++;all.set(p.id,r);}}return [...all.values()].sort((a,b)=>b.xp-a.xp||b.net-a.net||a.id.localeCompare(b.id));}
 function opening(h){return h.kind==='omaha'?(h.houseRules===2?50:100):25;}
 function potLimited(h){return h.kind==='omaha'&&(h.houseRules!==2||h.street===0);}
 function decisionComment(d){if(!d||d.assisted)return null;const c=d.context;
@@ -33,7 +66,7 @@ function decisionComment(d){if(!d||d.assisted)return null;const c=d.context;
 function make(options={},seed=Math.floor(E.random()*4294967295)||17){
  const t={version:3,currencyVersion:1,houseRake:0,entryFees:200,contributions:2200,ledger:[{type:'entry',net:-200}],ruleStart:0,id:'cash-'+Date.now().toString(36)+'-'+seed,seed:seed||17,config:{rule:'button',atmosphere:['mixed','pressure','wild'].includes(options.atmosphere)?options.atmosphere:'mixed'},players:[],dealer:0,number:0,hand:null,history:[],reserve:0,initialBankroll:2200,rebuyCount:0,botRefills:0,reportSeen:0};
  const names=['Você','Léo','Nina','Rafa','Bia','Caio','Duda','Gui','Iza'],styles=E.shuffle([{loose:.35,aggression:.65},{loose:.7,aggression:.22},{loose:.55,aggression:.8},{loose:.3,aggression:.4},{loose:.75,aggression:.55},{loose:.4,aggression:.5},{loose:.6,aggression:.35},{loose:.25,aggression:.7}],()=>rand(t));
- t.players=names.map((name,i)=>({id:i,name,stack:2000,...(i?{style:styles[i-1]}:{})}));t.dealer=Math.floor(rand(t)*9);seatProfiles(t);return t;
+ t.players=names.map((name,i)=>({id:i,name,stack:2000,...(i?{style:styles[i-1]}:{})}));t.dealer=Math.floor(rand(t)*9);seatProfiles(t);ensureSession(t);return t;
 }
 // Preserve completed results; refund and retain one unfinished hand from the old rules.
 function upgrade(t){
@@ -53,13 +86,14 @@ function log(t,type,seat=null,amount=0,extra={}){const h=t.hand;const ev={id:h.e
 function minimum(t){return (t.number+1)%10===0?50:25;}
 function start(t){
  if(t.hand&&t.hand.phase!=='finished')throw new Error('Conclua a mão atual.');
- if(t.players[0].stack<minimum(t))return false;seatProfiles(t);
+ if(t.session?.closed)return false;seatProfiles(t);const ss=ensureSession(t);if(t.number>=ss.maxHands){finishSession(t);return false;}
+ if(!t.spectating&&t.players[0].stack<minimum(t))return false;
  if(t.number)t.dealer=(t.dealer+1)%9;
- for(let i=1;i<9;i++)if(t.players[i].stack<minimum(t)){const add=2000-t.players[i].stack;t.players[i].stack+=add;t.botRefills+=add;}
+ for(let i=t.spectating?0:1;i<9;i++)if(t.players[i].stack===0)joinSeat(t,i);
  t.number++;const kind=t.number%10===0?'omaha':'holdem',deck=E.shuffle(E.deck(),()=>rand(t)),count=kind==='omaha'?4:2;
  const holes=Array.from({length:9},()=>[]);for(let r=0;r<count;r++)for(let off=1;off<=9;off++)holes[(t.dealer+off)%9].push(deck.pop());
  const board=deck.splice(0,5);
- t.hand={houseRules:2,id:t.id+'-'+t.number,number:t.number,kind,dealer:t.dealer,rule:t.config.rule,atmosphere:t.config.atmosphere,phase:'posting',street:0,board,visible:0,holes,dealt:[0,0,0,0,0,0,0,0,0],startStacks:t.players.map(p=>p.stack),total:[0,0,0,0,0,0,0,0,0],wagers:[0,0,0,0,0,0,0,0,0],folded:[false,false,false,false,false,false,false,false,false],dead:0,distributed:0,currentBet:0,lastRaise:kind==='omaha'?50:25,acted:[false,false,false,false,false,false,false,false,false],actedAt:[0,0,0,0,0,0,0,0,0],pending:[false,false,false,false,false,false,false,false,false],actor:null,events:[],decisions:[],postIndex:0,dealIndex:0,roundRaises:0,payouts:null,settleIndex:0,showdown:false,assisted:false,mood:(rand(t)-.5)*(t.config.atmosphere==='wild'?.6:.14),finishedAt:null};
+ t.hand={playerIds:t.players.map(participantId),playerNames:t.players.map(p=>p.name),houseRules:2,id:t.id+'-'+t.number,number:t.number,kind,dealer:t.dealer,rule:t.config.rule,atmosphere:t.config.atmosphere,phase:'posting',street:0,board,visible:0,holes,dealt:[0,0,0,0,0,0,0,0,0],startStacks:t.players.map(p=>p.stack),total:[0,0,0,0,0,0,0,0,0],wagers:[0,0,0,0,0,0,0,0,0],folded:[false,false,false,false,false,false,false,false,false],dead:0,distributed:0,currentBet:0,lastRaise:kind==='omaha'?50:25,acted:[false,false,false,false,false,false,false,false,false],actedAt:[0,0,0,0,0,0,0,0,0],pending:[false,false,false,false,false,false,false,false,false],actor:null,events:[],decisions:[],postIndex:0,dealIndex:0,roundRaises:0,payouts:null,settleIndex:0,showdown:false,assisted:false,mood:(rand(t)-.5)*(t.config.atmosphere==='wild'?.6:.14),finishedAt:null};
  log(t,'button',t.dealer);return true;
 }
 function spend(t,seat,amount,dead=false){const h=t.hand,n=Math.min(t.players[seat].stack,Math.max(0,Math.round(amount)));t.players[seat].stack-=n;if(dead)h.dead+=n;else{h.total[seat]+=n;h.wagers[seat]+=n;}return n;}
@@ -112,7 +146,7 @@ function reference(s){const gross=money(s.pot+s.toCall),fee=s.currencyVersion?ra
 }
 function act(t,action,to,options={}){const h=t.hand,seat=h.actor,l=legal(t,seat);if(!l)throw new Error('Não é hora de agir.');
  if(!['fold','check','call','raise'].includes(action)||action==='check'&&!l.check||action==='call'&&!l.call||action==='raise'&&(!l.raise||!Number.isInteger(to)||to<l.minTo||to>l.maxTo||(to%25!==0&&!(l.allIn&&to===l.maxTo))))throw new Error('Ação ou valor inválido.');
- if(seat===0){const context=publicSpot(t),ref=reference(context);h.decisions.push({id:h.decisions.length+1,context,action,to:action==='raise'?bb(to):null,correct:ref.accepted.includes(action),...ref,assisted:h.assisted});h.assisted=false;}
+ if(seat===0&&!t.spectating){const context=publicSpot(t),ref=reference(context);h.decisions.push({id:h.decisions.length+1,context,action,to:action==='raise'?bb(to):null,correct:ref.accepted.includes(action),...ref,assisted:h.assisted});h.assisted=false;}
  let amount=0;const previousBet=h.currentBet;
  if(action==='fold')h.folded[seat]=true;
  if(action==='call')amount=spend(t,seat,l.call);
@@ -132,20 +166,20 @@ function payoutPlan(t){const h=t.hand,contenders=live(h),result=[],evaluated={};
  h.evaluated=Object.fromEntries(Object.entries(evaluated).map(([i,v])=>[i,{name:v.name,holeUsed:v.holeUsed,boardUsed:v.boardUsed,vector:v.vector}]));return result;
 }
 function revealedHands(t){const h=t.hand;if(!h||!['settle','finished'].includes(h.phase))return [];const board=h.board.slice(0,h.visible);return h.holes.map((hole,seat)=>{const evaluated=board.length>=3?(h.kind==='omaha'?E.bestOmaha:E.bestHoldem)(hole,board):null;return {seat,name:t.players[seat].name,position:position(t,seat),cards:[...hole],folded:h.folded[seat],won:(h.payouts||[]).some(p=>p.seat===seat&&p.type==='award'),combination:evaluated?{name:evaluated.name,holeUsed:evaluated.holeUsed,boardUsed:evaluated.boardUsed}:null};});}
-function finish(t){const h=t.hand;h.phase='finished';h.actor=null;h.finishedAt=new Date().toISOString();h.delta=t.players[0].stack-h.startStacks[0];h.endStacks=t.players.map(p=>p.stack);
- const record={rake:bb(h.rake||0),grossPot:bb(h.grossPot||0),net:bb(t.reserve+t.players[0].stack-(t.contributions??t.initialBankroll)),id:h.id,number:h.number,kind:h.kind,rule:h.rule,atmosphere:h.atmosphere,position:position(t),delta:bb(h.delta),stack:bb(t.players[0].stack),bankroll:bb(t.reserve+t.players[0].stack),cards:[...h.holes[0]],board:h.board.slice(0,h.visible),showdown:h.showdown,revealed:revealedHands(t),decisions:JSON.parse(JSON.stringify(h.decisions)),events:h.events.filter(e=>!['deal','reveal','button'].includes(e.type)),payouts:h.payouts,finishedAt:h.finishedAt};t.history.push(record);if(t.currencyVersion)t.ledger.push({type:'hand',hand:h.number,net:money(record.net)});log(t,'finished',0,h.delta);
+function finish(t){const h=t.hand;h.phase='finished';h.actor=null;h.finishedAt=new Date().toISOString();h.delta=t.spectating?0:t.players[0].stack-h.startStacks[0];h.endStacks=t.players.map(p=>p.stack);
+ const record={playerIds:h.playerIds,playerNames:h.playerNames,rake:bb(h.rake||0),grossPot:bb(h.grossPot||0),net:bb(t.spectating?t.session.participants.hero.cashout+t.reserve-t.contributions:t.reserve+t.players[0].stack-(t.contributions??t.initialBankroll)),id:h.id,number:h.number,kind:h.kind,rule:h.rule,atmosphere:h.atmosphere,position:position(t),delta:bb(h.delta),stack:bb(t.spectating?t.session.participants.hero.cashout:t.players[0].stack),bankroll:bb(t.reserve+(t.spectating?t.session.participants.hero.cashout:t.players[0].stack)),cards:[...h.holes[0]],board:h.board.slice(0,h.visible),showdown:h.showdown,revealed:revealedHands(t),decisions:JSON.parse(JSON.stringify(h.decisions)),events:h.events.filter(e=>!['deal','reveal','button'].includes(e.type)),payouts:h.payouts,finishedAt:h.finishedAt};t.history.push(record);if(t.currencyVersion)t.ledger.push({type:'hand',hand:h.number,net:money(record.net)});log(t,'finished',0,h.delta);const ss=ensureSession(t);for(const id of h.playerIds||t.players.map(participantId))if(ss.participants[id])ss.participants[id].hands++;if(t.number>=ss.maxHands)finishSession(t);
 }
 function step(t){const h=t.hand;if(!h||h.phase==='finished')return false;
  if(h.phase==='posting'){const posts=[{seat:t.dealer,amount:opening(h)}];const post=posts[h.postIndex++];if(post){const n=spend(t,post.seat,post.amount,post.dead);h.currentBet=Math.max(...h.wagers);log(t,'entry',post.seat,n);return true;}h.phase='dealing';}
  if(h.phase==='dealing'){const count=h.kind==='omaha'?4:2;if(h.dealIndex<count*9){const seat=(t.dealer+1+h.dealIndex)%9;h.dealt[seat]++;h.dealIndex++;log(t,'deal',seat);return true;}beginRound(t);return true;}
- if(h.phase==='betting'){if(h.actor===0)return false;if(h.actor===null){settleRound(t);return true;}const choice=bot(t,h.actor);act(t,choice.action,choice.to);return true;}
+ if(h.phase==='betting'){if(h.actor===0&&!t.spectating)return false;if(h.actor===null){settleRound(t);return true;}const choice=bot(t,h.actor);act(t,choice.action,choice.to);return true;}
  if(h.phase==='collect'){const amounts=[...h.wagers];h.wagers.fill(0);h.currentBet=0;h.lastRaise=opening(h);log(t,'collect',null,amounts.reduce((a,b)=>a+b,0),{amounts});if(live(h).length===1||h.street===3){h.showdown=live(h).length>1;h.phase='settle';}else{h.street++;h.phase='reveal';}return true;}
  if(h.phase==='reveal'){const count=h.street+2;if(h.visible<count){h.visible++;log(t,'reveal',null,0,{cardIndex:h.visible-1});return true;}beginRound(t);return true;}
  if(h.phase==='settle'){h.revealedSeats ||= [];if(h.revealedSeats.length<9){const seat=(t.dealer+1+h.revealedSeats.length)%9;h.revealedSeats.push(seat);log(t,'show-cards',seat);return true;}if(!h.payouts){h.payouts=payoutPlan(t);h.distributed+=h.rake||0;t.houseRake=(t.houseRake||0)+(h.rake||0);log(t,'showdown');return true;}const pay=h.payouts[h.settleIndex++];if(pay){t.players[pay.seat].stack+=pay.amount;h.distributed+=pay.amount;log(t,pay.type,pay.seat,pay.amount,{label:pay.label});return true;}finish(t);return true;}
  return false;
 }
 function runToHero(t,max=500){let steps=0;while(steps++<max&&step(t)){}if(steps>=max)throw new Error('Limite de ações excedido.');return t.hand;}
-function rebuy(t){if(t.hand&&t.hand.phase!=='finished')return false;t.players[0].stack+=2000;t.contributions=(t.contributions??t.initialBankroll)+2000;t.rebuyCount++;t.ledger||=[];t.ledger.push({type:'rebuy',net:t.reserve+t.players[0].stack-t.contributions});return true;}
-function visible(t){const h=t.hand;if(!h)return null;return {number:h.number,kind:h.kind,phase:h.phase,street:h.street,dealer:t.dealer,actor:h.actor,pot:bb(pot(t)),centerPot:bb(Math.max(0,pot(t)-h.wagers.reduce((a,b)=>a+b,0))),board:h.board.slice(0,h.visible),event:h.event,players:t.players.map((p,i)=>({seat:i,name:p.name,stack:bb(p.stack),position:position(t,i),folded:h.folded[i],wager:bb(h.wagers[i]),dealt:h.dealt[i],cards:i===0?h.holes[i].slice(0,h.dealt[i]):h.phase==='finished'||(h.phase==='settle'&&h.revealedSeats?.includes(i))?h.holes[i]:null,allIn:p.stack===0})),legal:h.actor===0?legal(t,0):null};}
-return {PROFILES,decisionComment,opening,potLimited,sizing,minimum,rake,make,upgrade,start,step,act,legal,position,pot,visible,runToHero,rebuy,publicSpot,reference,equity,holePower,payoutPlan,revealedHands,bb,money,STREETS};
+function rebuy(t){if(t.session?.closed||t.spectating)return false;if(t.hand&&t.hand.phase!=='finished')return false;t.players[0].stack+=2000;t.contributions=(t.contributions??t.initialBankroll)+2000;t.rebuyCount++;if(t.session?.participants.hero)t.session.participants.hero.invested+=2000;t.ledger||=[];t.ledger.push({type:'rebuy',net:t.reserve+t.players[0].stack-t.contributions});return true;}
+function visible(t){const h=t.hand;if(!h)return null;return {number:h.number,kind:h.kind,phase:h.phase,street:h.street,dealer:t.dealer,actor:h.actor,pot:bb(pot(t)),centerPot:bb(Math.max(0,pot(t)-h.wagers.reduce((a,b)=>a+b,0))),board:h.board.slice(0,h.visible),event:h.event,players:t.players.map((p,i)=>({seat:i,name:p.name,stack:bb(p.stack),position:position(t,i),folded:h.folded[i],wager:bb(h.wagers[i]),dealt:h.dealt[i],cards:i===0?h.holes[i].slice(0,h.dealt[i]):h.phase==='finished'||(h.phase==='settle'&&h.revealedSeats?.includes(i))?h.holes[i]:null,allIn:p.stack===0})),legal:h.actor===0&&!t.spectating?legal(t,0):null};}
+return {SESSION_HANDS,ensureSession,finishSession,watch,ranking,participantId,PROFILES,decisionComment,opening,potLimited,sizing,minimum,rake,make,upgrade,start,step,act,legal,position,pot,visible,runToHero,rebuy,publicSpot,reference,equity,holePower,payoutPlan,revealedHands,bb,money,STREETS};
 });
