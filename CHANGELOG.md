@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.4.0 — 2026-11-07
+- Fundo Casa do Gui offline e elenco de 12 perfis fictícios com oito bots por mesa.
+- Omaha R$ 0,50, dealer inicia pré-flop, pot-limit somente pré-flop.
+- Regras congeladas por mão para preservar partidas abertas.
+- Comentários prudentes após decisões e tom brasileiro respeitoso no Gemini.
+- Roadmap de WhatsApp, consentimento, modelos compartilhados e ranking.
+
 ## 2.3.6 — 2026-11-02
 - “Pular até minha vez” e “Próxima mão” aparecem no centro do feltro, logo abaixo das cartas comunitárias.
 - No celular, os botões duplicados nos cards foram ocultados; ao fim da mão a tela mostra a mesa com o botão central.

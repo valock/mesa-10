@@ -73,3 +73,6 @@ body .toast{bottom:calc(78px + env(safe-area-inset-bottom))}
 .waiting-card [data-do="cash-skip"],.cash-result [data-do="cash-next"]{display:none}
 }
 @media(max-width:520px){.stage-cta{margin-top:9px;min-height:40px;padding:8px 16px;font-size:12px}}
+
+/* Casa do Gui: original artwork as a responsive table surface. */
+.cash-stage .felt{background:linear-gradient(#09090944,#09090944),url('assets/casa-do-gui.webp') center/100% 100% no-repeat;border-color:#987136;box-shadow:0 0 0 4px #241a10,0 12px 25px #0008}.cash-stage .felt-pattern,.cash-stage .table-watermark{display:none}.cash-stage .pot,.cash-stage .board-caption{background:#101713df;border-radius:12px;padding:5px 10px}.cash-stage .seat-label{background:#101713ed}.table-comment{padding:16px 20px;border-radius:16px;background:#17291f;border:1px solid #70896b;margin:10px 0}.table-comment.caution{background:#322719;border-color:#b08b52}.table-comment p{font-size:13px;line-height:1.5}.table-comment small{color:#c4c5b7;font-size:11px}.profile-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}.profile-grid article{border:1px solid #71806355;border-radius:12px;padding:14px}.profile-grid h3{margin:0 0 6px}.profile-grid small{color:#b6c5a9}

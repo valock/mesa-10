@@ -1,6 +1,6 @@
 # Roadmap · Mesa 10
 
-Atualizado para v2.3.3. Itens futuros; sem prazo prometido.
+Atualizado para v2.4.0. Itens futuros; sem prazo prometido.
 
 ## Entregue
 - [x] Nove jogadores; ciclos de nove Hold’em e um Omaha.
@@ -25,3 +25,13 @@ Atualizado para v2.3.3. Itens futuros; sem prazo prometido.
 
 ## Regra de manutenção
 A cada entrega, atualizar README, package.json e CHANGELOG com a mesma versão e revisar este roadmap. Login/ranking só estarão disponíveis após implementação e validação.
+
+## Perfis compartilhados e WhatsApp (futuro)
+- [ ] Login por telefone/WhatsApp via provedor oficial e verificação de posse, sem colocar tokens no cliente.
+- [ ] Perfil privado por padrão; consentimento separado para usar decisões na criação de um adversário virtual compartilhado.
+- [ ] Modelo comportamental por modalidade: seleção de mãos, posição, frequência de apostas, tamanhos e resposta à pressão; mínimo de amostra e incerteza visíveis.
+- [ ] Começar com parâmetros estatísticos ajustados às decisões, sem anunciar treinamento de um modelo de IA que ainda não existe.
+- [ ] Versões do perfil, desligar compartilhamento, excluir histórico/modelo e desvincular telefone do apelido público.
+- [ ] Catálogo de adversários autorizados; telefones nunca expostos a outros jogadores.
+- [ ] Ranking validado no servidor, desafios equivalentes e separação entre decisão didática e lucro simulado; detecção de manipulação.
+- [x] Elenco fictício Casa do Gui com IDs estáveis, estilos persistentes por mesa e oito personagens por sessão.
