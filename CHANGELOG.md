@@ -1,5 +1,13 @@
 # Changelog
 
+## 2.6.0 · 2026-11-15
+- Nota por decisão no estilo de ferramentas de estudo: melhor jogada, boa alternativa, imprecisão, erro e erro grave, com perda de EV estimada em reais onde o modelo tem preço e equidade.
+- Números do spot no painel de decisão e na revisão: preço (pot odds), tamanho da aposta, MDF, SPR e textura do board.
+- Revisão da mão com barra de equidade × preço, EV estimado de pagar, tamanho da sua aposta e board da decisão.
+- Meu jogo: nota de precisão 0–100, distribuição das notas, perda por 100 mãos, quebra por rodada e posição e as maiores perdas com atalho para revisar.
+- Tabelas: seu range real sobre a faixa de referência, com entradas fora da faixa e mãos da faixa em que você não entrou.
+- Notas calculadas a partir das decisões já salvas; nenhum dado salvo foi alterado e o contrato da API não mudou.
+
 ## 2.5.1 · 2026-11-08
 - Corrige feltro excessivamente vertical no iPhone/PWA; preserva proporção da arte e patrocinadores.
 - Redistribui nove jogadores, cartas, apostas e animações no celular.

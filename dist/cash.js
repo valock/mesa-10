@@ -181,5 +181,37 @@ function step(t){const h=t.hand;if(!h||h.phase==='finished')return false;
 function runToHero(t,max=500){let steps=0;while(steps++<max&&step(t)){}if(steps>=max)throw new Error('Limite de ações excedido.');return t.hand;}
 function rebuy(t){if(t.session?.closed||t.spectating)return false;if(t.hand&&t.hand.phase!=='finished')return false;t.players[0].stack+=2000;t.contributions=(t.contributions??t.initialBankroll)+2000;t.rebuyCount++;if(t.session?.participants.hero)t.session.participants.hero.invested+=2000;t.ledger||=[];t.ledger.push({type:'rebuy',net:t.reserve+t.players[0].stack-t.contributions});return true;}
 function visible(t){const h=t.hand;if(!h)return null;return {number:h.number,kind:h.kind,phase:h.phase,street:h.street,dealer:t.dealer,actor:h.actor,pot:bb(pot(t)),centerPot:bb(Math.max(0,pot(t)-h.wagers.reduce((a,b)=>a+b,0))),board:h.board.slice(0,h.visible),event:h.event,players:t.players.map((p,i)=>({seat:i,name:p.name,stack:bb(p.stack),position:position(t,i),folded:h.folded[i],wager:bb(h.wagers[i]),dealt:h.dealt[i],cards:i===0?h.holes[i].slice(0,h.dealt[i]):h.phase==='finished'||(h.phase==='settle'&&h.revealedSeats?.includes(i))?h.holes[i]:null,allIn:p.stack===0})),legal:h.actor===0&&!t.spectating?legal(t,0):null};}
-return {SESSION_HANDS,ensureSession,finishSession,watch,ranking,participantId,PROFILES,decisionComment,opening,potLimited,sizing,minimum,rake,make,upgrade,start,step,act,legal,position,pot,visible,runToHero,rebuy,publicSpot,reference,equity,holePower,payoutPlan,revealedHands,bb,money,STREETS};
+/* Leitura no estilo de ferramentas GTO: números do spot, textura do board e nota por decisão.
+   Tudo deriva do modelo didático já registrado na decisão; não é saída de solver. */
+const GRADES={best:{label:'Melhor jogada',weight:100},ok:{label:'Boa alternativa',weight:90},inaccuracy:{label:'Imprecisão',weight:55},mistake:{label:'Erro',weight:25},blunder:{label:'Erro grave',weight:0}};
+const RANGE_ORDER=['UTG','HJ','CO','BTN'];
+function rangeGroup(position){return ({'UTG+1':'UTG','UTG+2':'UTG',MP:'UTG','MP+1':'HJ',LJ:'HJ',BB:'SB'})[position]||position;}
+function texture(board){if(!board||board.length<3)return null;
+ const vals=board.map(c=>E.rankValue(c[0])),suits={};board.forEach(c=>suits[c[1]]=(suits[c[1]]||0)+1);const flush=Math.max(...Object.values(suits)),paired=new Set(vals).size<vals.length;
+ const span=list=>{let best=1;for(let i=0;i<list.length;i++){let n=1;for(let j=i+1;j<list.length&&list[j]-list[i]<=4;j++)n++;best=Math.max(best,n);}return best;},plain=[...new Set(vals)].sort((a,b)=>a-b),low=[...new Set(vals.map(v=>v===14?1:v))].sort((a,b)=>a-b),wheel=span(low);let run=Math.max(span(plain),wheel>=3?wheel:1);if(run===2&&!plain.some((v,i)=>i&&v-plain[i-1]<=2))run=1;
+ const high=vals.filter(v=>v>=10).length,score=(flush>=3?2:flush===2&&board.length<5?1:0)+(run>=3?2:run===2&&board.length<5?1:0),key=score>=3?'wet':score>=1?'semi':'dry',tags=[];
+ tags.push(flush>=4?'quatro cartas do mesmo naipe':flush===3?'três cartas do mesmo naipe':flush===2&&board.length<5?'dois naipes iguais':'naipes variados');
+ if(run>=3)tags.push('cartas conectadas');else if(run===2&&board.length<5)tags.push('alguma conexão');else tags.push('cartas distantes');
+ if(paired)tags.push('mesa pareada');if(high>=2)tags.push('cartas altas');
+ return {key,label:{dry:'Board seco',semi:'Board semi-coordenado',wet:'Board coordenado'}[key],tags,paired,flush,run,sizing:{dry:'Em boards secos, ferramentas de estudo costumam usar apostas menores (25–33% do pote) com mais frequência.',semi:'Em boards semi-coordenados, tamanhos médios (50–66% do pote) aparecem com frequência nas ferramentas de estudo.',wet:'Em boards coordenados, ferramentas de estudo costumam apostar maior (66–100% do pote) e com menos mãos.'}[key]};}
+function spotMetrics(c){if(!c)return null;const pot=Number(c.pot)||0,call=Number(c.toCall)||0,before=Math.max(0,pot-call),gross=money(pot+call),fee=c.currencyVersion?rake(gross):0,net=bb(gross-fee);
+ return {potOdds:call&&net>0?call/net:null,betPct:call&&before>0?call/before:null,mdf:call&&pot>0&&c.opponents===1?clamp(1-call/pot,0,1):null,spr:pot>0&&c.stack!==undefined?c.stack/pot:null,texture:texture(c.board),finalPot:net};}
+function inRange(group,cards){try{return E.RANGES[group]?E.RANGES[group].has(E.handClass(cards)):null;}catch(e){return null;}}
+function grade(d){const done=(key,loss=null,ratio=null)=>({key,label:GRADES[key].label,weight:GRADES[key].weight,loss:loss===null?null:Math.round(loss*100)/100,ratio});
+ if(!d||!d.context)return done('ok');const c=d.context,accepted=d.accepted||[d.expected];
+ if(d.action===d.expected)return done('best');if(accepted.includes(d.action))return done('ok');
+ const m=spotMetrics(c),eq=typeof d.equity==='number'?d.equity:null,byGap=(gap,a,b)=>gap<=a?'inaccuracy':gap<=b?'mistake':'blunder';
+ if(d.action==='fold'&&!c.toCall){if(eq===null)return done('mistake');const pot=bb(money(c.pot)-(c.currencyVersion?rake(money(c.pot)):0));return done(byGap(eq,.12,.30),eq*pot,eq);}
+ if(c.street>0&&c.toCall>0&&eq!==null&&d.price>0){const gap=Math.abs(eq-d.price);return done(byGap(gap,.15,.30),gap*m.finalPot,gap);}
+ if(c.street>0&&eq!==null)return done(Math.abs(eq-.65)<.25?'inaccuracy':'mistake');
+ if(c.street===0&&c.kind==='holdem'&&!c.opened&&d.theme!=='defense'){const group=rangeGroup(c.position),entered=d.action==='raise'||d.action==='call';
+  if(d.expected==='raise')return done(entered?'inaccuracy':inRange('UTG',c.cards)?'mistake':'inaccuracy');
+  return done(entered&&inRange('BTN',c.cards)&&group!=='BTN'?'inaccuracy':'mistake');}
+ if(c.street===0&&c.cards){const power=holePower(c.cards),call=c.kind==='omaha'?.61:.57,line=d.theme==='defense'?(d.expected==='raise'?.87:call):.62;
+  if(d.theme==='defense'&&d.expected==='raise')return done(d.action==='fold'?'mistake':'inaccuracy');
+  if(d.theme==='defense'&&d.expected!=='fold'&&d.expected!=='check'&&d.action==='raise')return done('inaccuracy');
+  return done(Math.abs(power-line)<.08?'inaccuracy':'mistake');}
+ return done('inaccuracy');}
+function callEV(d){if(!d||!d.context||!(d.context.street>0)||!(d.context.toCall>0)||typeof d.equity!=='number'||!(d.price>0))return null;return Math.round(d.context.toCall*(d.equity/d.price-1)*100)/100;}
+return {GRADES,RANGE_ORDER,rangeGroup,texture,spotMetrics,grade,callEV,SESSION_HANDS,ensureSession,finishSession,watch,ranking,participantId,PROFILES,decisionComment,opening,potLimited,sizing,minimum,rake,make,upgrade,start,step,act,legal,position,pot,visible,runToHero,rebuy,publicSpot,reference,equity,holePower,payoutPlan,revealedHands,bb,money,STREETS};
 });
