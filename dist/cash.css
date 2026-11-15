@@ -241,3 +241,10 @@ body .toast{bottom:calc(78px + env(safe-area-inset-bottom))}
 .mine-dot{width:4px;height:4px;right:1px;top:1px}
 .worst-row{flex-direction:column;align-items:flex-start;gap:4px}
 }
+/* v2.7.0 · Faixa estimada dos adversários na revisão */
+.range-read{margin:14px 0 4px;padding:12px 14px;border:1px solid #3f5a3a;border-radius:12px;background:#10241966}
+.range-read .eyebrow{font-size:9px}
+.range-read>div{display:grid;gap:7px;margin:10px 0 8px}
+.range-read>div>span{position:relative;display:flex;align-items:center;height:22px;border-radius:6px;background:#0c2017;overflow:hidden}
+.range-read i{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,#3f7a57,#75ad78);border-radius:inherit}
+.range-read b{position:relative;padding:0 9px;font-size:11px;font-weight:600;color:#f0f2e9;text-shadow:0 1px 2px #0009}

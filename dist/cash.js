@@ -125,28 +125,41 @@ function bot(t,seat){const h=t.hand,l=legal(t,seat),style=t.players[seat].style,
  if(l.raise&&h.currentBet===0&&rand(t)<agg*(.28+power*.5)){return {action:'raise',to:sizing(l,Math.max(opening(h),pot(t)*(rand(t)<.5?.5:.75)))};}
  return {action:'check'};
 }
-function publicSpot(t){const h=t.hand,l=legal(t,0);if(!l)return null;return {currencyVersion:t.currencyVersion||0,kind:h.kind,number:h.number,street:h.street,position:position(t),rule:t.config.rule,cards:[...h.holes[0]],board:h.board.slice(0,h.visible),pot:bb(pot(t)),stack:bb(t.players[0].stack),toCall:bb(l.call),minRaiseTo:bb(l.minTo),maxRaiseTo:bb(l.maxTo),currentBet:bb(h.currentBet),already:bb(l.already),canRaise:l.raise,canCheck:l.check,opponents:live(h).length-1,opened:h.roundRaises>0,assisted:h.assisted};}
+/* Leitura pública: o que cada adversário ativo fez nesta mão. Nunca usa cartas ocultas.
+   Código por ação: rua + l (pagou a entrada), c (pagou aposta ou aumento), r (aumentou), b (abriu aposta), x (mesa). */
+function reads(h){const out=[],raised=[false,false,false,false];const acts={};for(const e of h.events||[]){if(!['raise','call','check'].includes(e.type)||e.seat===0||e.seat===null)continue;const st=e.street||0;let k=e.type==='check'?'x':e.type==='call'?(st===0&&!raised[0]?'l':'c'):(st>0&&!e.previousBet?'b':'r');if(e.type==='raise')raised[st]=true;(acts[e.seat]||=[]).push(st+k);}
+ for(const seat of live(h))if(seat!==0)out.push((acts[seat]||[]).join(''));return out;}
+function readFactors(hole,read,board,kind){const pre=holePower(hole),evaluate=kind==='omaha'?E.bestOmaha:E.bestHoldem,seen={},out=[];
+ for(let i=0;i+1<read.length;i+=2){const st=Number(read[i]),k=read[i+1];if(st>0&&board.length<st+2)continue;out.push(()=>{if(st===0)return k==='r'?(pre>.65?1:.2):k==='c'?clamp((pre-.35)/.25,.12,1):k==='l'?clamp((pre-.25)/.25,.15,1):(pre>.65?.5:1);
+   if(seen[st]===undefined){const made=evaluate(hole,board.slice(0,st+2));seen[st]=clamp(.1+made.category*.14+(made.vector[1]||0)/140,0,.99);}const m=seen[st];return k==='r'?(m>.65?1:.2):k==='b'?.28+m*.5:k==='c'?clamp((m-.2)/.25,.12,1):1-(.28+m*.5)*.5;});}
+ return out;}
+function likelihood(hole,read,board,kind){return read?readFactors(hole,read,board,kind).reduce((w,f)=>w*f(),1):1;}
+/* Aceita a mão com probabilidade igual ao produto dos fatores, parando no primeiro que rejeita. */
+function consistent(hole,read,board,kind,rng){for(const f of readFactors(hole,read,board,kind))if(rng()>=f())return false;return true;}
+function publicSpot(t){const h=t.hand,l=legal(t,0);if(!l)return null;return {currencyVersion:t.currencyVersion||0,kind:h.kind,number:h.number,street:h.street,position:position(t),rule:t.config.rule,cards:[...h.holes[0]],board:h.board.slice(0,h.visible),pot:bb(pot(t)),stack:bb(t.players[0].stack),toCall:bb(l.call),minRaiseTo:bb(l.minTo),maxRaiseTo:bb(l.maxTo),currentBet:bb(h.currentBet),already:bb(l.already),canRaise:l.raise,canCheck:l.check,opponents:live(h).length-1,opened:h.roundRaises>0,assisted:h.assisted,reads:reads(h)};}
 const equityCache=new Map();
-function equity(spot){const key=JSON.stringify([spot.kind,spot.cards,spot.board,spot.opponents]);if(equityCache.has(key))return equityCache.get(key);
+function equity(spot){const ranged=Array.isArray(spot.reads)&&spot.reads.some(Boolean),key=JSON.stringify([spot.kind,spot.cards,spot.board,spot.opponents,ranged?spot.reads:0]);if(equityCache.has(key))return equityCache.get(key);
  if(!spot.board.length)return null;
- const rng=E.seededRandom(key),known=[...spot.cards,...spot.board],available=E.deck().filter(c=>!known.includes(c)),evaluate=spot.kind==='omaha'?E.bestOmaha:E.bestHoldem,count=spot.kind==='omaha'?4:2,n=spot.kind==='omaha'?120:200;let score=0;
- for(let i=0;i<n;i++){const shuffled=E.shuffle(available,rng),board=[...spot.board,...shuffled.splice(0,5-spot.board.length)],hero=evaluate(spot.cards,board);let beaten=false,ties=1;for(let o=0;o<spot.opponents;o++){const other=evaluate(shuffled.splice(0,count),board),cmp=E.compareVectors(hero.vector,other.vector);if(cmp<0){beaten=true;break;}if(cmp===0)ties++;}if(!beaten)score+=1/ties;}
- const result={value:score/n,samples:n};if(equityCache.size>150)equityCache.clear();equityCache.set(key,result);return result;
+ const rng=E.seededRandom(key),known=[...spot.cards,...spot.board],available=E.deck().filter(c=>!known.includes(c)),evaluate=spot.kind==='omaha'?E.bestOmaha:E.bestHoldem,count=spot.kind==='omaha'?4:2,n=spot.kind==='omaha'?120:ranged?260:200,limit=spot.kind==='omaha'?8:14,tries=Array(spot.opponents).fill(0),kept=Array(spot.opponents).fill(0);let score=0;
+ for(let i=0;i<n;i++){const shuffled=E.shuffle(available,rng),holes=[];
+  for(let o=0;o<spot.opponents;o++){const read=ranged?spot.reads[o]:'';let hole=shuffled.splice(0,count);if(read){for(let attempt=0;attempt<limit;attempt++){tries[o]++;if(consistent(hole,read,spot.board,spot.kind,rng)){kept[o]++;break;}if(attempt===limit-1)break;shuffled.push(...hole);hole=shuffled.splice(0,count);}}holes.push(hole);}
+  const board=[...spot.board,...shuffled.splice(0,5-spot.board.length)],hero=evaluate(spot.cards,board);let beaten=false,ties=1;for(const hole of holes){const other=evaluate(hole,board),cmp=E.compareVectors(hero.vector,other.vector);if(cmp<0){beaten=true;break;}if(cmp===0)ties++;}if(!beaten)score+=1/ties;}
+ const result={value:score/n,samples:n,ranged,ranges:ranged?tries.map((t,o)=>t?Math.round(Math.max(kept[o],1)/t*100)/100:1):null};if(equityCache.size>150)equityCache.clear();equityCache.set(key,result);return result;
 }
-function reference(s){const gross=money(s.pot+s.toCall),fee=s.currencyVersion?rake(gross):0;const price=s.toCall/(bb(gross-fee))||0;let expected,accepted,reason,theme,eq=null;
+function reference(s){const gross=money(s.pot+s.toCall),fee=s.currencyVersion?rake(gross):0;const price=s.toCall/(bb(gross-fee))||0;let expected,accepted,reason,theme,eq=null,ranged=false,ranges=null,line=null;
  if(s.street===0){const power=holePower(s.cards),pos=({'UTG+1':'UTG','UTG+2':'UTG',MP:'UTG','MP+1':'HJ',LJ:'HJ',BB:'SB'})[s.position]||s.position;
   if(!s.opened){const open=s.kind==='holdem'?E.recommended(pos,s.cards)==='raise':power>=.62;expected=open&&s.canRaise?'raise':s.canCheck?'check':'fold';theme='selection';reason=s.kind==='holdem'?`${E.handClass(s.cards)} no ${s.position}: referência de seleção por posição. ${s.rule==='button'?'A entrada do dealer já vale como aposta. Esta faixa por ordem de ação é apenas uma aproximação para a regra da mesa.':'Faixa didática de abertura, sem rake.'}`:'No Omaha, priorize cartas conectadas, pares altos e naipes que trabalhem juntos. Referência heurística de seleção.';}
   else{expected=power>=.87&&s.canRaise?'raise':power>=(s.kind==='omaha'?.61:.57)?s.toCall?'call':s.canRaise?'raise':'check':s.canCheck?'check':'fold';theme='defense';reason='Ao enfrentar aumento, a referência fica mais seletiva. Força inicial, posição e preço importam; não é um range de defesa resolvido por solver.';}
   accepted=[expected];
- }else{eq=equity(s).value;const made=(s.kind==='omaha'?E.bestOmaha:E.bestHoldem)(s.cards,s.board);
-  if(s.toCall){expected=eq>=price?'call':'fold';accepted=Math.abs(eq-price)<=.07?['call','fold']:[expected];if(eq>.82&&s.canRaise)accepted.push('raise');theme='price';reason=`Equidade estimada ${Math.round(eq*100)}% contra ${s.opponents} mão(s) aleatória(s); preço ${Math.round(price*100)}%${s.currencyVersion?' após taxa estimada da casa':''}. No flop/turn, apostas futuras podem mudar o valor de pagar. A faixa não foi ajustada ao perfil do adversário.`;}
-  else{expected=eq>.65&&made.category>=1&&s.canRaise?'raise':'check';accepted=Math.abs(eq-.65)<.1?['raise','check']:[expected];theme='value';reason=`Equidade estimada ${Math.round(eq*100)}%. O modelo sugere ${expected==='raise'?'apostar por valor':'controlar o pote'} contra mãos aleatórias. Uma faixa que paga pode ser mais forte que essa amostra.`;}
+ }else{const est=equity(s);eq=est.value;ranged=est.ranged;ranges=est.ranges;line=ranged?.6:.65;const made=(s.kind==='omaha'?E.bestOmaha:E.bestHoldem)(s.cards,s.board);
+  if(s.toCall){expected=eq>=price?'call':'fold';accepted=Math.abs(eq-price)<=.07?['call','fold']:[expected];if(eq>.82&&s.canRaise)accepted.push('raise');theme='price';reason=`Equidade estimada ${Math.round(eq*100)}% contra ${ranged?`a faixa estimada de ${s.opponents} adversário(s), pelas ações desta mão`:`${s.opponents} mão(s) aleatória(s)`}; preço ${Math.round(price*100)}%${s.currencyVersion?' após taxa estimada da casa':''}. No flop/turn, apostas futuras podem mudar o valor de pagar. ${ranged?'A faixa é uma estimativa a partir do que cada um fez; não usa cartas ocultas nem o estilo individual.':'A faixa não foi ajustada ao perfil do adversário.'}`;}
+  else{expected=eq>line&&made.category>=1&&s.canRaise?'raise':'check';accepted=Math.abs(eq-line)<.1?['raise','check']:[expected];theme='value';reason=`Equidade estimada ${Math.round(eq*100)}%. O modelo sugere ${expected==='raise'?'apostar por valor':'controlar o pote'} contra ${ranged?'a faixa estimada dos adversários. Quem paga uma aposta costuma ter uma faixa ainda mais forte.':'mãos aleatórias. Uma faixa que paga pode ser mais forte que essa amostra.'}`;}
  }
- return {expected,accepted,reason,theme,equity:eq,price};
+ return {expected,accepted,reason,theme,equity:eq,price,ranged,ranges,line};
 }
 function act(t,action,to,options={}){const h=t.hand,seat=h.actor,l=legal(t,seat);if(!l)throw new Error('Não é hora de agir.');
  if(!['fold','check','call','raise'].includes(action)||action==='check'&&!l.check||action==='call'&&!l.call||action==='raise'&&(!l.raise||!Number.isInteger(to)||to<l.minTo||to>l.maxTo||(to%25!==0&&!(l.allIn&&to===l.maxTo))))throw new Error('Ação ou valor inválido.');
- if(seat===0&&!t.spectating){const context=publicSpot(t),ref=reference(context);h.decisions.push({id:h.decisions.length+1,context,action,to:action==='raise'?bb(to):null,correct:ref.accepted.includes(action),...ref,assisted:h.assisted});h.assisted=false;}
+ if(seat===0&&!t.spectating){const context=publicSpot(t),ref=reference(context);h.decisions.push({id:h.decisions.length+1,context,action,to:action==='raise'?bb(to):null,correct:ref.accepted.includes(action),...ref,villains:ref.ranges?live(h).filter(i=>i!==0).map(i=>t.players[i].name):null,assisted:h.assisted});h.assisted=false;}
  let amount=0;const previousBet=h.currentBet;
  if(action==='fold')h.folded[seat]=true;
  if(action==='call')amount=spend(t,seat,l.call);
@@ -203,7 +216,7 @@ function grade(d){const done=(key,loss=null,ratio=null)=>({key,label:GRADES[key]
  const m=spotMetrics(c),eq=typeof d.equity==='number'?d.equity:null,byGap=(gap,a,b)=>gap<=a?'inaccuracy':gap<=b?'mistake':'blunder';
  if(d.action==='fold'&&!c.toCall){if(eq===null)return done('mistake');const pot=bb(money(c.pot)-(c.currencyVersion?rake(money(c.pot)):0));return done(byGap(eq,.12,.30),eq*pot,eq);}
  if(c.street>0&&c.toCall>0&&eq!==null&&d.price>0){const gap=Math.abs(eq-d.price);return done(byGap(gap,.15,.30),gap*m.finalPot,gap);}
- if(c.street>0&&eq!==null)return done(Math.abs(eq-.65)<.25?'inaccuracy':'mistake');
+ if(c.street>0&&eq!==null)return done(Math.abs(eq-(d.line||.65))<.25?'inaccuracy':'mistake');
  if(c.street===0&&c.kind==='holdem'&&!c.opened&&d.theme!=='defense'){const group=rangeGroup(c.position),entered=d.action==='raise'||d.action==='call';
   if(d.expected==='raise')return done(entered?'inaccuracy':inRange('UTG',c.cards)?'mistake':'inaccuracy');
   return done(entered&&inRange('BTN',c.cards)&&group!=='BTN'?'inaccuracy':'mistake');}
@@ -213,5 +226,5 @@ function grade(d){const done=(key,loss=null,ratio=null)=>({key,label:GRADES[key]
   return done(Math.abs(power-line)<.08?'inaccuracy':'mistake');}
  return done('inaccuracy');}
 function callEV(d){if(!d||!d.context||!(d.context.street>0)||!(d.context.toCall>0)||typeof d.equity!=='number'||!(d.price>0))return null;return Math.round(d.context.toCall*(d.equity/d.price-1)*100)/100;}
-return {GRADES,RANGE_ORDER,rangeGroup,texture,spotMetrics,grade,callEV,SESSION_HANDS,ensureSession,finishSession,watch,ranking,participantId,PROFILES,decisionComment,opening,potLimited,sizing,minimum,rake,make,upgrade,start,step,act,legal,position,pot,visible,runToHero,rebuy,publicSpot,reference,equity,holePower,payoutPlan,revealedHands,bb,money,STREETS};
+return {reads,likelihood,consistent,GRADES,RANGE_ORDER,rangeGroup,texture,spotMetrics,grade,callEV,SESSION_HANDS,ensureSession,finishSession,watch,ranking,participantId,PROFILES,decisionComment,opening,potLimited,sizing,minimum,rake,make,upgrade,start,step,act,legal,position,pot,visible,runToHero,rebuy,publicSpot,reference,equity,holePower,payoutPlan,revealedHands,bb,money,STREETS};
 });
