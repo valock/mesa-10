@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.7.0 · 2026-11-15
+- Equidade pós-flop contra a faixa estimada de cada adversário, reduzida pelas ações públicas dele na mão (pagar, aumentar, apostar, pedir mesa), no lugar de mãos aleatórias.
+- A leitura usa só o que aconteceu na mesa: nenhuma carta oculta e nenhum estilo individual entram na conta.
+- Revisão da mão mostra a faixa estimada de cada adversário, em % das mãos possíveis.
+- Referência de aposta por valor passa a 60% de equidade contra a faixa estimada (65% nas mãos antigas, contra mãos aleatórias).
+- Mãos já jogadas mantêm a equidade e a nota com que foram registradas.
+
 ## 2.6.0 · 2026-11-15
 - Nota por decisão no estilo de ferramentas de estudo: melhor jogada, boa alternativa, imprecisão, erro e erro grave, com perda de EV estimada em reais onde o modelo tem preço e equidade.
 - Números do spot no painel de decisão e na revisão: preço (pot odds), tamanho da aposta, MDF, SPR e textura do board.
